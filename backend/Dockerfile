@@ -48,7 +48,11 @@ RUN echo 'server {\n\
     }\n\
 }' > /etc/nginx/sites-available/default
 
+# Copy file entrypoint vào container và cấp quyền thực thi
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 EXPOSE 10000
 
-# Chạy đồng thời PHP-FPM và Nginx thông qua script khởi động
-CMD service nginx start && php-fpm
+# Sử dụng entrypoint script để khởi động đồng thời Nginx và PHP-FPM
+CMD ["/usr/local/bin/entrypoint.sh"]
