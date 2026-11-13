@@ -30,7 +30,7 @@ function App() {
     setTimeout(() => setMessage(null), 1500);
   };
 
-  // Mở modal ở chế độ "Thêm mới sản phẩm"
+  // Mở modal ở chế độ "Thêm mới sản phẩm" (Mặc định số lượng là 1)
   const openAddModal = () => {
     setEditingId(null);
     setFormData({ code: '', name: '', category: 'Đầm Dạ Hội', price: '', quantity: 1 });
@@ -63,13 +63,19 @@ function App() {
       newErrors.code = 'Mã phải đúng 5 ký tự: 2 chữ in hoa đầu + 3 số cuối (VD: DR003)';
     }
 
-    // RÀNG BUỘC 2: Giá sản phẩm phải là số và lớn hơn 500.000 ₫
+    // RÀNG BUỘC 2: Giá sản phẩm phải là số và lớn hơn 200.000 ₫
     const rawPriceNum = Number(formData.price.replace(/[^0-9]/g, ''));
-    if (isNaN(rawPriceNum) || rawPriceNum <= 500000) {
-      newErrors.price = 'Giá sản phẩm phải lớn hơn 500.000 ₫!';
+    if (isNaN(rawPriceNum) || rawPriceNum <= 200000) {
+      newErrors.price = 'Giá sản phẩm phải lớn hơn 200.000 ₫!';
     }
 
-    // Nếu có lỗi, hiển thị lỗi đỏ dưới input và dừng lại không cho lưu
+    // RÀNG BUỘC 3: Số lượng sản phẩm phải từ 0 trở lên (cho phép nhập số 0)
+    const qtyNum = Number(formData.quantity);
+    if (isNaN(qtyNum) || qtyNum < 0) {
+      newErrors.quantity = 'Số lượng sản phẩm không được nhỏ hơn 0!';
+    }
+
+    // Nếu có lỗi, hiển thị lỗi đỏ dưới input tương ứng và dừng lại
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -77,13 +83,15 @@ function App() {
 
     setErrors({});
     const formattedPrice = rawPriceNum.toLocaleString('vi-VN') + ' ₫';
-    const currentStatus = Number(formData.quantity) > 0 ? 'Còn hàng' : 'Hết hàng';
+    
+    // ĐIỀU KIỆN TRẠNG THÁI: Nếu số lượng > 0 thì "Còn hàng", ngược lại (bằng 0) thì "Hết hàng"
+    const currentStatus = qtyNum > 0 ? 'Còn hàng' : 'Hết hàng';
 
     if (editingId !== null) {
       // CẬP NHẬT SẢN PHẨM ĐÃ CÓ
       const updatedList = products.map((p) =>
         p.id === editingId
-          ? { ...p, ...formData, code: formData.code.toUpperCase(), price: formattedPrice, quantity: Number(formData.quantity), status: currentStatus }
+          ? { ...p, ...formData, code: formData.code.toUpperCase(), price: formattedPrice, quantity: qtyNum, status: currentStatus }
           : p
       );
       setProducts(updatedList);
@@ -95,7 +103,7 @@ function App() {
         ...formData,
         code: formData.code.toUpperCase(),
         price: formattedPrice,
-        quantity: Number(formData.quantity),
+        quantity: qtyNum,
         status: currentStatus
       };
       setProducts([...products, newItem]);
@@ -308,12 +316,12 @@ function App() {
                 </select>
               </div>
 
-              {/* Nhập Giá sản phẩm kèm hiển thị lỗi màu đỏ nếu nhỏ hơn hoặc bằng 500.000 */}
+              {/* Nhập Giá sản phẩm kèm hiển thị lỗi màu đỏ nếu nhỏ hơn hoặc bằng 200.000 */}
               <div>
                 <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#AD8B73' }}>Giá (VNĐ)</label>
                 <input 
                   type="text" 
-                  placeholder="Ví dụ: 850000"
+                  placeholder="Ví dụ: 350000"
                   value={formData.price}
                   onChange={(e) => setFormData({...formData, price: e.target.value})}
                   className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none text-gray-800 ${errors.price ? 'border-red-500 bg-red-50' : ''}`}
@@ -322,7 +330,7 @@ function App() {
                 {errors.price && <p className="text-xs text-red-600 font-semibold mt-1">{errors.price}</p>}
               </div>
 
-              {/* Nhập Số lượng */}
+              {/* Nhập Số lượng (cho phép từ 0 trở lên, nếu = 0 sẽ tự hiện trạng thái Hết hàng) */}
               <div>
                 <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#AD8B73' }}>Số lượng</label>
                 <input 
@@ -330,10 +338,10 @@ function App() {
                   min="0"
                   value={formData.quantity}
                   onChange={(e) => setFormData({...formData, quantity: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none text-gray-800"
-                  style={{ borderColor: '#CEAB93' }}
-                  required
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none text-gray-800 ${errors.quantity ? 'border-red-500 bg-red-50' : ''}`}
+                  style={{ borderColor: errors.quantity ? undefined : '#CEAB93' }}
                 />
+                {errors.quantity && <p className="text-xs text-red-600 font-semibold mt-1">{errors.quantity}</p>}
               </div>
 
               {/* Nút bấm Thao tác trong Modal (Hủy & Lưu/Cập nhật) */}
