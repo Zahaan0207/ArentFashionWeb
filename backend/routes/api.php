@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\SanPhamController;
 
 // ĐÂY LÀ CODE CÓ SẴN CỦA LARAVEL (Bạn cứ giữ nguyên)
 Route::get('/user', function (Request $request) {
@@ -12,3 +13,4 @@ Route::get('/user', function (Request $request) {
 Route::get('/test', function () {
     return response()->json(['message' => 'Backend Laravel đã kết nối thành công!']);
 });
+Route::apiResource('san-phams', SanPhamController::class);
