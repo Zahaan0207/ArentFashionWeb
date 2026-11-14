@@ -4,13 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\SanPhamController;
 
-// ĐÂY LÀ CODE CÓ SẴN CỦA LARAVEL (Bạn cứ giữ nguyên)
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
-
-// ĐÂY LÀ CODE BẠN THÊM VÀO ĐỂ TEST
-Route::get('/test', function () {
-    return response()->json(['message' => 'Backend Laravel đã kết nối thành công!']);
-});
-Route::apiResource('san-phams', SanPhamController::class);
+// Khai báo trọn bộ API CRUD cho sản phẩm
+Route::get('/san-phams', [SanPhamController::class, 'index']);
+Route::post('/san-phams', [SanPhamController::class, 'store']);
+Route::put('/san-phams/{id}', [SanPhamController::class, 'update']);
+Route::delete('/san-phams/{id}', [SanPhamController::class, 'destroy']);
