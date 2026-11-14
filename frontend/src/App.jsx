@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosClient from './api/axiosClient'; // Sử dụng axiosClient đã cấu hình sẵn baseURL
 
-// Đường dẫn API Backend Laravel của bạn
-const API_URL = 'https://arent-fashion-web-backend-xxxx.onrender.com/api/san-phams';
+const API_URL = '/san-phams';
+
 function App() {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,7 +19,7 @@ function App() {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(API_URL);
+      const response = await axiosClient.get(API_URL);
       setProducts(response.data);
     } catch (error) {
       console.error('Lỗi khi tải dữ liệu:', error);
@@ -41,7 +41,6 @@ function App() {
 
   const openEditModal = (product) => {
     setEditingId(product.id);
-    // Lấy số từ chuỗi giá để hiển thị vào form sửa (VD: "2.500.000 ₫" -> "2500000")
     const rawPrice = product.price.toString().replace(/[^0-9]/g, '');
     setFormData({
       code: product.code,
@@ -91,20 +90,17 @@ function App() {
       };
 
       if (editingId !== null) {
-        // Gửi yêu cầu PUT để cập nhật
-        await axios.put(`${API_URL}/${editingId}`, payload);
+        await axiosClient.put(`${API_URL}/${editingId}`, payload);
         showArentMessage(`Đã cập nhật sản phẩm ${payload.code} thành công!`);
       } else {
-        // Gửi yêu cầu POST để thêm mới
-        await axios.post(API_URL, payload);
+        await axiosClient.post(API_URL, payload);
         showArentMessage('Thêm sản phẩm mới thành công!');
       }
 
       setIsModalOpen(false);
-      fetchProducts(); // Tải lại danh sách từ Database
+      fetchProducts();
     } catch (error) {
       if (error.response && error.response.data && error.response.data.errors) {
-        // Bắt lỗi validate trả về từ Laravel Backend
         const laravelErrors = error.response.data.errors;
         let formattedErrors = {};
         if (laravelErrors.code) formattedErrors.code = laravelErrors.code[0];
@@ -121,7 +117,7 @@ function App() {
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?')) {
       try {
-        await axios.delete(`${API_URL}/${id}`);
+        await axiosClient.delete(`${API_URL}/${id}`);
         showArentMessage('Đã xóa sản phẩm thành công!');
         fetchProducts();
       } catch (error) {
