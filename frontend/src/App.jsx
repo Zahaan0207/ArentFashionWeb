@@ -1,36 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
+// Đường dẫn API Backend Laravel của bạn
+const API_URL = 'https://arent-fashion-web-backend-xxxx.onrender.com/api/san-phams';
 function App() {
-  // ==========================================
-  // 1. KHAI BÁO CÁC STATE (TRẠNG THÁI) CỦA ỨNG DỤNG
-  // ==========================================
-  
-  // Danh sách sản phẩm ban đầu (Mỗi sản phẩm là 1 object)
-  const [products, setProducts] = useState([
-    { id: 1, code: 'DR001', name: 'Đầm Dạ Hội Xẻ Tà Kim Sa', category: 'Đầm Dạ Hội', price: '2.500.000 ₫', quantity: 3, status: 'Còn hàng' },
-    { id: 2, code: 'DR002', name: 'Đầm Maxi Trễ Vai Sang Trọng', category: 'Đầm Maxi', price: '1.850.000 ₫', quantity: 5, status: 'Còn hàng' },
-    { id: 3, code: 'AC001', name: 'Cài Tóc Vương Miện Ngọc Trai', category: 'Phụ Kiện', price: '650.000 ₫', quantity: 10, status: 'Còn hàng' }
-  ]);
+  const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [formData, setFormData] = useState({ code: '', name: '', category: 'Đầm Dạ Hội', price: '', quantity: 1 });
+  const [errors, setErrors] = useState({});
+  const [message, setMessage] = useState(null);
 
-  const [searchTerm, setSearchTerm] = useState('');          // Lưu từ khóa tìm kiếm
-  const [isModalOpen, setIsModalOpen] = useState(false);     // Đóng/mở bảng Modal (Thêm/Sửa)
-  const [editingId, setEditingId] = useState(null);          // ID sản phẩm đang sửa (null = thêm mới)
-  const [formData, setFormData] = useState({ code: '', name: '', category: 'Đầm Dạ Hội', price: '', quantity: 1 }); // Lưu dữ liệu trong form nhập
-  
-  const [errors, setErrors] = useState({});                  // Lưu thông báo lỗi validate dữ liệu
-  const [message, setMessage] = useState(null);              // Lưu nội dung thông báo nổi giữa màn hình
+  // Gọi API lấy danh sách sản phẩm khi mở trang
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
-  // ==========================================
-  // 2. CÁC HÀM XỬ LÝ NGHIỆP VỤ (FUNCTIONS)
-  // ==========================================
-
-  // Hiển thị thông báo giữa màn hình và tự động tắt sau 1.5 giây
-  const showArentMessage = (text) => {
-    setMessage(text);
-    setTimeout(() => setMessage(null), 1500);
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get(API_URL);
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Lỗi khi tải dữ liệu:', error);
+      showArentMessage('Không thể kết nối đến Backend Laravel!');
+    }
   };
 
-  // Mở modal ở chế độ "Thêm mới sản phẩm" (Mặc định số lượng là 1)
+  const showArentMessage = (text) => {
+    setMessage(text);
+    setTimeout(() => setMessage(null), 800);
+  };
+
   const openAddModal = () => {
     setEditingId(null);
     setFormData({ code: '', name: '', category: 'Đầm Dạ Hội', price: '', quantity: 1 });
@@ -38,102 +39,105 @@ function App() {
     setIsModalOpen(true);
   };
 
-  // Mở modal ở chế độ "Chỉnh sửa sản phẩm" (Đổ dữ liệu cũ vào form)
   const openEditModal = (product) => {
     setEditingId(product.id);
+    // Lấy số từ chuỗi giá để hiển thị vào form sửa (VD: "2.500.000 ₫" -> "2500000")
+    const rawPrice = product.price.toString().replace(/[^0-9]/g, '');
     setFormData({
       code: product.code,
       name: product.name,
       category: product.category,
-      price: product.price,
+      price: rawPrice,
       quantity: product.quantity
     });
     setErrors({});
     setIsModalOpen(true);
   };
 
-  // Xử lý lưu sản phẩm (Dùng chung cho cả Thêm mới và Cập nhật) có tích hợp Validation
-  const handleSaveProduct = (e) => {
+  // Xử lý Lưu / Cập nhật sản phẩm gửi lên Laravel API
+  const handleSaveProduct = async (e) => {
     e.preventDefault();
     let newErrors = {};
 
-    // RÀNG BUỘC 1: Mã sản phẩm phải đúng 5 ký tự (2 chữ hoa đầu + 3 số cuối, VD: DR003)
     const codeRegex = /^[A-Z]{2}[0-9]{3}$/;
     if (!codeRegex.test(formData.code.trim())) {
       newErrors.code = 'Mã phải đúng 5 ký tự: 2 chữ in hoa đầu + 3 số cuối (VD: DR003)';
     }
 
-    // RÀNG BUỘC 2: Giá sản phẩm phải là số và lớn hơn 200.000 ₫
-    const rawPriceNum = Number(formData.price.replace(/[^0-9]/g, ''));
+    const rawPriceNum = Number(formData.price.toString().replace(/[^0-9]/g, ''));
     if (isNaN(rawPriceNum) || rawPriceNum <= 200000) {
       newErrors.price = 'Giá sản phẩm phải lớn hơn 200.000 ₫!';
     }
 
-    // RÀNG BUỘC 3: Số lượng sản phẩm phải từ 0 trở lên (cho phép nhập số 0)
     const qtyNum = Number(formData.quantity);
     if (isNaN(qtyNum) || qtyNum < 0) {
       newErrors.quantity = 'Số lượng sản phẩm không được nhỏ hơn 0!';
     }
 
-    // Nếu có lỗi, hiển thị lỗi đỏ dưới input tương ứng và dừng lại
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
     setErrors({});
-    const formattedPrice = rawPriceNum.toLocaleString('vi-VN') + ' ₫';
-    
-    // ĐIỀU KIỆN TRẠNG THÁI: Nếu số lượng > 0 thì "Còn hàng", ngược lại (bằng 0) thì "Hết hàng"
-    const currentStatus = qtyNum > 0 ? 'Còn hàng' : 'Hết hàng';
 
-    if (editingId !== null) {
-      // CẬP NHẬT SẢN PHẨM ĐÃ CÓ
-      const updatedList = products.map((p) =>
-        p.id === editingId
-          ? { ...p, ...formData, code: formData.code.toUpperCase(), price: formattedPrice, quantity: qtyNum, status: currentStatus }
-          : p
-      );
-      setProducts(updatedList);
-      showArentMessage(`Đã cập nhật sản phẩm ${formData.code.toUpperCase()} thành công!`);
-    } else {
-      // THÊM MỚI SẢN PHẨM
-      const newItem = {
-        id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1,
-        ...formData,
+    try {
+      const payload = {
         code: formData.code.toUpperCase(),
-        price: formattedPrice,
-        quantity: qtyNum,
-        status: currentStatus
+        name: formData.name,
+        category: formData.category,
+        price: rawPriceNum,
+        quantity: qtyNum
       };
-      setProducts([...products, newItem]);
-      showArentMessage('Thêm sản phẩm mới thành công!');
-    }
 
-    setIsModalOpen(false); // Đóng modal sau khi lưu thành công
+      if (editingId !== null) {
+        // Gửi yêu cầu PUT để cập nhật
+        await axios.put(`${API_URL}/${editingId}`, payload);
+        showArentMessage(`Đã cập nhật sản phẩm ${payload.code} thành công!`);
+      } else {
+        // Gửi yêu cầu POST để thêm mới
+        await axios.post(API_URL, payload);
+        showArentMessage('Thêm sản phẩm mới thành công!');
+      }
+
+      setIsModalOpen(false);
+      fetchProducts(); // Tải lại danh sách từ Database
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.errors) {
+        // Bắt lỗi validate trả về từ Laravel Backend
+        const laravelErrors = error.response.data.errors;
+        let formattedErrors = {};
+        if (laravelErrors.code) formattedErrors.code = laravelErrors.code[0];
+        if (laravelErrors.price) formattedErrors.price = laravelErrors.price[0];
+        if (laravelErrors.quantity) formattedErrors.quantity = laravelErrors.quantity[0];
+        setErrors(formattedErrors);
+      } else {
+        showArentMessage('Có lỗi xảy ra khi lưu dữ liệu!');
+      }
+    }
   };
 
-  // Xóa sản phẩm theo ID
-  const handleDelete = (id) => {
+  // Xóa sản phẩm qua API
+  const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?')) {
-      setProducts(products.filter(p => p.id !== id));
-      showArentMessage('Đã xóa sản phẩm thành công!');
+      try {
+        await axios.delete(`${API_URL}/${id}`);
+        showArentMessage('Đã xóa sản phẩm thành công!');
+        fetchProducts();
+      } catch (error) {
+        showArentMessage('Không thể xóa sản phẩm!');
+      }
     }
   };
 
-  // Lọc danh sách sản phẩm theo từ khóa tìm kiếm (theo tên hoặc mã)
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // ==========================================
-  // 3. GIAO DIỆN TRANG (JSX RENDER)
-  // ==========================================
   return (
     <div className="min-h-screen font-sans text-[#AD8B73]" style={{ backgroundColor: '#E7DECF' }}>
       
-      {/* 3.1. Hộp thông báo nổi giữa màn hình */}
       {message && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
           <div className="bg-white px-8 py-4 rounded-2xl shadow-2xl border-2 flex items-center gap-3" style={{ borderColor: '#AD8B73', color: '#AD8B73' }}>
@@ -143,26 +147,20 @@ function App() {
         </div>
       )}
 
-      {/* 3.2. Thanh Header (Đầu trang) */}
       <header className="text-white shadow-md" style={{ backgroundColor: '#AD8B73' }}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <span className="text-xl font-bold tracking-wider text-[#FFFBE9]">ARENT FASHION</span>
-          </div>
+          <span className="text-xl font-bold tracking-wider text-[#FFFBE9]">ARENT FASHION (FULLSTACK)</span>
           <nav className="space-x-6 text-sm font-medium">
             <a href="#" className="text-[#FFFBE9] font-semibold underline underline-offset-4">Quản lý sản phẩm</a>
           </nav>
         </div>
       </header>
 
-      {/* 3.3. Khu vực Nội dung Chính */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        
-        {/* Tiêu đề trang & Nút mở Modal Thêm mới */}
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold font-serif" style={{ color: '#AD8B73' }}>Quản lý sản phẩm</h1>
-            <p className="text-sm text-[#7D5A50]">Quản lý thông tin và số lượng trang phục, phụ kiện theo phong cách Vintage.</p>
+            <p className="text-sm text-[#7D5A50]">Hệ thống Fullstack kết nối React với Laravel Database.</p>
           </div>
           <button 
             onClick={openAddModal}
@@ -173,7 +171,6 @@ function App() {
           </button>
         </div>
 
-        {/* Thanh tìm kiếm và đếm tổng số lượng kết quả */}
         <div className="p-4 rounded-xl shadow-sm border mb-6 flex flex-wrap gap-4 items-center justify-between" style={{ backgroundColor: '#DFD3C3', borderColor: '#CEAB93' }}>
           <div className="flex-1 min-w-[300px]">
             <input 
@@ -190,7 +187,6 @@ function App() {
           </div>
         </div>
 
-        {/* Bảng dữ liệu hiển thị danh sách sản phẩm */}
         <div className="rounded-xl shadow-sm border overflow-hidden bg-white" style={{ borderColor: '#CEAB93' }}>
           <table className="w-full text-left border-collapse">
             <thead>
@@ -206,62 +202,53 @@ function App() {
             </thead>
             <tbody className="divide-y text-sm" style={{ borderColor: '#E7DECF' }}>
               {filteredProducts.length > 0 ? (
-                filteredProducts.map((p) => (
-                  <tr key={p.id} className="hover:bg-[#E7DECF]/40 transition">
-                    <td className="py-3 px-4 font-semibold text-[#7D5A50]">{p.code}</td>
-                    <td className="py-3 px-4 font-medium text-gray-800">{p.name}</td>
-                    <td className="py-3 px-4 text-[#AD8B73]">{p.category}</td>
-                    <td className="py-3 px-4 font-bold" style={{ color: '#AD8B73' }}>{p.price}</td>
-                    <td className="py-3 px-4 text-center font-bold text-gray-700">{p.quantity}</td>
-                    <td className="py-3 px-4 text-center">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        p.quantity > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                      }`}>
-                        {p.quantity > 0 ? 'Còn hàng' : 'Hết hàng'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-center space-x-2">
-                      {/* Nút Xem thông tin */}
-                      <button 
-                        onClick={() => showArentMessage(`Chi tiết: ${p.name} - Giá: ${p.price}`)}
-                        className="bg-[#CEAB93] hover:bg-[#AD8B73] text-white px-3 py-1 rounded text-xs font-semibold shadow transition"
-                      >
-                        Xem
-                      </button>
-                      {/* Nút Sửa thông tin */}
-                      <button 
-                        onClick={() => openEditModal(p)}
-                        className="bg-[#DFD3C3] hover:bg-[#CEAB93] text-gray-800 px-3 py-1 rounded text-xs font-semibold shadow transition"
-                      >
-                        Sửa
-                      </button>
-                      {/* Nút Xóa sản phẩm */}
-                      <button 
-                        onClick={() => handleDelete(p.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-semibold shadow transition"
-                      >
-                        Xóa
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                filteredProducts.map((p) => {
+                  const displayPrice = Number(p.price).toLocaleString('vi-VN') + ' ₫';
+                  return (
+                    <tr key={p.id} className="hover:bg-[#E7DECF]/40 transition">
+                      <td className="py-3 px-4 font-semibold text-[#7D5A50]">{p.code}</td>
+                      <td className="py-3 px-4 font-medium text-gray-800">{p.name}</td>
+                      <td className="py-3 px-4 text-[#AD8B73]">{p.category}</td>
+                      <td className="py-3 px-4 font-bold" style={{ color: '#AD8B73' }}>{displayPrice}</td>
+                      <td className="py-3 px-4 text-center font-bold text-gray-700">{p.quantity}</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          p.quantity > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {p.quantity > 0 ? 'Còn hàng' : 'Hết hàng'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center space-x-2">
+                        <button 
+                          onClick={() => openEditModal(p)}
+                          className="bg-[#DFD3C3] hover:bg-[#CEAB93] text-gray-800 px-3 py-1 rounded text-xs font-semibold shadow transition"
+                        >
+                          Sửa
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(p.id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-semibold shadow transition"
+                        >
+                          Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center py-8 text-gray-500">Không tìm thấy sản phẩm nào phù hợp!</td>
+                  <td colSpan="7" className="text-center py-8 text-gray-500">Chưa có sản phẩm nào trong cơ sở dữ liệu!</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-
       </main>
 
-      {/* 3.4. Chân trang (Footer) */}
       <footer className="text-center py-6 text-xs text-[#AD8B73] border-t mt-12" style={{ borderColor: '#CEAB93' }}>
-        © 2026 - ArentFashion | Hệ thống quản lý đồ án MVP Web Thời Trang Vintage
+        © 2026 - ArentFashion | Fullstack React & Laravel
       </footer>
 
-      {/* 3.5. Hộp thoại Popup Modal (Dùng chung cho Thêm mới & Chỉnh sửa) */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border" style={{ borderColor: '#CEAB93' }}>
@@ -270,8 +257,6 @@ function App() {
             </h3>
             
             <form onSubmit={handleSaveProduct} className="space-y-4">
-              
-              {/* Nhập Mã sản phẩm kèm hiển thị lỗi màu đỏ nếu sai */}
               <div>
                 <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#AD8B73' }}>Mã sản phẩm (VD: DR003)</label>
                 <input 
@@ -286,7 +271,6 @@ function App() {
                 {errors.code && <p className="text-xs text-red-600 font-semibold mt-1">{errors.code}</p>}
               </div>
 
-              {/* Nhập Tên trang phục */}
               <div>
                 <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#AD8B73' }}>Tên trang phục</label>
                 <input 
@@ -300,7 +284,6 @@ function App() {
                 />
               </div>
 
-              {/* Lựa chọn Thể loại */}
               <div>
                 <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#AD8B73' }}>Thể loại</label>
                 <select 
@@ -316,7 +299,6 @@ function App() {
                 </select>
               </div>
 
-              {/* Nhập Giá sản phẩm kèm hiển thị lỗi màu đỏ nếu nhỏ hơn hoặc bằng 200.000 */}
               <div>
                 <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#AD8B73' }}>Giá (VNĐ)</label>
                 <input 
@@ -330,7 +312,6 @@ function App() {
                 {errors.price && <p className="text-xs text-red-600 font-semibold mt-1">{errors.price}</p>}
               </div>
 
-              {/* Nhập Số lượng (cho phép từ 0 trở lên, nếu = 0 sẽ tự hiện trạng thái Hết hàng) */}
               <div>
                 <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#AD8B73' }}>Số lượng</label>
                 <input 
@@ -344,7 +325,6 @@ function App() {
                 {errors.quantity && <p className="text-xs text-red-600 font-semibold mt-1">{errors.quantity}</p>}
               </div>
 
-              {/* Nút bấm Thao tác trong Modal (Hủy & Lưu/Cập nhật) */}
               <div className="flex justify-end space-x-3 pt-2">
                 <button 
                   type="button" 
@@ -365,7 +345,6 @@ function App() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
