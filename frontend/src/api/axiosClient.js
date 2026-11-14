@@ -1,8 +1,7 @@
-import axiosClient from './api/axiosClient'; 
+import axios from 'axios';
 
 const axiosClient = axios.create({
-  // Lấy link từ biến môi trường của Vite, nếu không có sẽ tự động trỏ về link Render của bạn
-  baseURL: import.meta.env.VITE_API_URL || 'https://arentfashionweb-backend.onrender.com/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://arent-fashion-web-backend.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
