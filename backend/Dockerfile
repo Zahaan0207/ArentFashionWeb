@@ -1,58 +1,30 @@
-FROM php:8.3-fpm
+FROM php:8.3-cli
 
-# Cài đặt các gói hệ thống và PHP extensions cần thiết cho Laravel
+# Cài đặt thư viện hệ thống và extension SQLite cho Laravel
 RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libsqlite3-dev \
     zip \
     unzip \
-    nginx \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install pdo_sqlite mbstring exif pcntl bcmath gd
 
-# Cấy Composer chính thức vào container
+# Cài Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Thiết lập thư mục làm việc
 WORKDIR /var/www
-
-# Copy toàn bộ mã nguồn vào container
 COPY . .
 
-# Cấp quyền cho thư mục storage và bootstrap/cache
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-
-# Cài đặt các gói phụ thuộc bằng Composer
+# Cài đặt thư viện PHP
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Cấu hình Nginx trỏ vào thư mục public của Laravel
-RUN echo 'server {\n\
-    listen 10000;\n\
-    root /var/www/public;\n\
-    add_header X-Frame-Options "SAMEORIGIN";\n\
-    add_header X-Content-Type-Options "nosniff";\n\
-    index index.php;\n\
-    charset utf-8;\n\
-    location / {\n\
-        try_files $uri $uri/ /index.php?$query_string;\n\
-    }\n\
-    location ~ \.php$ {\n\
-        fastcgi_pass 127.0.0.1:9000;\n\
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n\
-        include fastcgi_params;\n\
-    }\n\
-    location ~ /\.(?!well-known).* {\n\
-        deny all;\n\
-    }\n\
-}' > /etc/nginx/sites-available/default
+# Tạo sẵn file database SQLite nếu chưa có và cấp quyền ghi
+RUN mkdir -p database && touch database/database.sqlite \
+    && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/database \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache /var/www/database
 
-# Copy file entrypoint vào container và cấp quyền thực thi
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-EXPOSE 10000
-
-# Sử dụng entrypoint script để khởi động đồng thời Nginx và PHP-FPM
-CMD ["/usr/local/bin/entrypoint.sh"]
+# Chạy migrate tạo bảng và khởi động server đúng cổng Render cấp
+CMD php artisan config:clear && php artisan route:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
