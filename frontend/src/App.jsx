@@ -20,8 +20,8 @@ function App() {
     try {
       const res = await API.get('/api/dresses');
       if (res.data.success) {
+        // Sắp xếp ID giảm dần (mới nhất lên đầu)
         const sortedData = res.data.data.sort((a, b) => b.id - a.id);
-        
         setDresses(sortedData);
       }
     } catch (err) {
@@ -35,28 +35,25 @@ function App() {
     if (activeMenu === 'dresses') fetchDresses();
   }, [activeMenu]);
 
+  // Tự động nhận diện tên để sinh Slug tối đa 5 ký tự (VR cho ren, DL cho lụa)
   const handleNameChange = (e) => {
     const val = e.target.value;
     setName(val);
 
     if (!editingId) {
       const lowerName = val.toLowerCase();
-      let prefix = 'SP'; // Mặc định nếu không phải ren hay lụa
+      let prefix = 'SP';
 
-      // Kiểm tra loại sản phẩm để gán tiền tố chuẩn 2 ký tự
       if (lowerName.includes('ren')) {
-        prefix = 'VR'; // Váy Ren -> VR
+        prefix = 'VR';
       } else if (lowerName.includes('lụa') || lowerName.includes('lua')) {
-        prefix = 'DL'; // Đầm Lụa -> DL
+        prefix = 'DL';
       } else if (lowerName.includes('dạ hội') || lowerName.includes('da hoi')) {
-        prefix = 'DH'; // Dạ Hội -> DH
+        prefix = 'DH';
       }
 
-      // Lấy ngẫu nhiên hoặc tạo số thứ tự 3 chữ số ngẫu nhiên từ 001-999 (hoặc bạn có thể tối ưu theo ý muốn)
-      // Để đảm bảo dưới 5 ký tự (VD: VR001 tối đa đúng 5 ký tự)
-      const randomNum = Math.floor(Math.random() * 900) + 100; // Số từ 100 đến 999
-      const generatedSlug = `${prefix}${randomNum}`.substring(0, 5); // Cắt chặt không bao giờ vượt quá 5 ký tự
-
+      const randomNum = Math.floor(Math.random() * 90) + 10; // Số từ 10 đến 99
+      const generatedSlug = `${prefix}${randomNum}`.substring(0, 5); // Cắt chặt không quá 5 ký tự
       setSlug(generatedSlug);
     }
   };
@@ -71,31 +68,39 @@ function App() {
     setDescription('');
   };
 
-const handleNameChange = (e) => {
-    const val = e.target.value;
-    setName(val);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name || !slug || !price) return alert('Vui lòng điền đủ Tên, Slug và Giá!');
 
-    if (!editingId) {
-      const lowerName = val.toLowerCase();
-      let prefix = 'SP'; // Mặc định nếu không phải ren hay lụa
+    // Ràng buộc giá sản phẩm phải trên 100.000 đ
+    if (Number(price) < 100000) {
+      return alert('Giá sản phẩm phải từ 100.000 đ trở lên!');
+    }
 
-      // Kiểm tra loại sản phẩm để gán tiền tố chuẩn 2 ký tự
-      if (lowerName.includes('ren')) {
-        prefix = 'VR'; // Váy Ren -> VR
-      } else if (lowerName.includes('lụa') || lowerName.includes('lua')) {
-        prefix = 'DL'; // Đầm Lụa -> DL
-      } else if (lowerName.includes('dạ hội') || lowerName.includes('da hoi')) {
-        prefix = 'DH'; // Dạ Hội -> DH
+    const payload = {
+      name,
+      slug,
+      category,
+      price: Number(price),
+      stock_quantity: Number(stockQuantity),
+      description
+    };
+
+    try {
+      if (editingId) {
+        await API.put(`/api/dresses/${editingId}`, payload);
+        alert('Cập nhật váy dạ hội thành công!');
+      } else {
+        await API.post('/api/dresses', payload);
+        alert('Thêm mẫu váy mới thành công!');
       }
-
-      // Lấy ngẫu nhiên hoặc tạo số thứ tự 3 chữ số ngẫu nhiên từ 001-999 (hoặc bạn có thể tối ưu theo ý muốn)
-      // Để đảm bảo dưới 5 ký tự (VD: VR001 tối đa đúng 5 ký tự)
-      const randomNum = Math.floor(Math.random() * 900) + 100; // Số từ 100 đến 999
-      const generatedSlug = `${prefix}${randomNum}`.substring(0, 5); // Cắt chặt không bao giờ vượt quá 5 ký tự
-
-      setSlug(generatedSlug);
+      resetForm();
+      fetchDresses();
+    } catch (err) {
+      alert('Lỗi: ' + (err.response?.data?.message || err.message));
     }
   };
+
   const handleEdit = (item) => {
     setEditingId(item.id);
     setName(item.name);
@@ -191,17 +196,18 @@ const handleNameChange = (e) => {
                     type="text"
                     value={name}
                     onChange={handleNameChange}
-                    placeholder="VD: Váy kim sa cúp ngực"
+                    placeholder="VD: Váy ren trắng / Đầm lụa..."
                     style={{ width: '100%', padding: '10px 12px', border: '1px solid #CFC3B4', borderRadius: '8px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Slug *</label>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Slug * (Tối đa 5 ký tự)</label>
                   <input
                     type="text"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
-                    placeholder="vay-kim-sa-cup-nguc"
+                    maxLength={5}
+                    placeholder="VR001, DL001..."
                     style={{ width: '100%', padding: '10px 12px', border: '1px solid #CFC3B4', borderRadius: '8px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
                   />
                 </div>
@@ -219,12 +225,12 @@ const handleNameChange = (e) => {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Giá thuê/bán (VND) *</label>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Giá thuê/bán (VND) * (≥ 100k)</label>
                   <input
                     type="number"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    placeholder="3000000"
+                    placeholder="300000"
                     style={{ width: '100%', padding: '10px 12px', border: '1px solid #CFC3B4', borderRadius: '8px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
                   />
                 </div>
@@ -292,6 +298,8 @@ const handleNameChange = (e) => {
                             </td>
                             <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4A3828' }}>{item.category}</td>
                             <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4A3828' }}>{Number(item.price).toLocaleString('vi-VN')} đ</td>
+                            
+                            {/* Trạng thái tồn kho động (Còn hàng / Hết hàng) */}
                             <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4A3828' }}>
                               {item.stock_quantity > 0 ? (
                                 <span style={{ color: '#2F855A', backgroundColor: '#E6FFFA', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
@@ -303,7 +311,8 @@ const handleNameChange = (e) => {
                                 </span>
                               )}
                             </td>
-                            <td>
+
+                            <td style={{ padding: '14px 16px', display: 'flex', gap: '8px' }}>
                               <button onClick={() => handleEdit(item)} style={{ padding: '6px 12px', backgroundColor: '#D49A42', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Sửa</button>
                               <button onClick={() => handleDelete(item.id)} style={{ padding: '6px 12px', backgroundColor: '#C95B5B', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Xóa</button>
                             </td>
