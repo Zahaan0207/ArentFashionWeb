@@ -35,25 +35,31 @@ function App() {
     if (activeMenu === 'dresses') fetchDresses();
   }, [activeMenu]);
 
-  // Tự động nhận diện tên để sinh Slug tối đa 5 ký tự (VR cho ren, DL cho lụa)
+  // Tự động sinh Slug: Lấy ký tự đầu viết hoa + Tăng dần số thứ tự (01, 02...)
   const handleNameChange = (e) => {
     const val = e.target.value;
     setName(val);
 
     if (!editingId) {
-      const lowerName = val.toLowerCase();
-      let prefix = 'SP';
+      const normalized = val
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[đĐ]/g, 'd');
 
-      if (lowerName.includes('ren')) {
-        prefix = 'VR';
-      } else if (lowerName.includes('lụa') || lowerName.includes('lua')) {
-        prefix = 'DL';
-      } else if (lowerName.includes('dạ hội') || lowerName.includes('da hoi')) {
-        prefix = 'DH';
-      }
+      const words = normalized.trim().split(/\s+/);
+      let prefix = words.map(word => word.charAt(0).toUpperCase()).join('');
 
-      const randomNum = Math.floor(Math.random() * 90) + 10; // Số từ 10 đến 99
-      const generatedSlug = `${prefix}${randomNum}`.substring(0, 5); // Cắt chặt không quá 5 ký tự
+      if (!prefix) prefix = 'SP';
+
+      const existingCount = dresses.filter(item => 
+        item.slug && item.slug.toUpperCase().startsWith(prefix)
+      ).length;
+
+      const nextNumber = existingCount + 1;
+      const formattedNum = String(nextNumber).padStart(2, '0');
+
+      const generatedSlug = `${prefix}${formattedNum}`;
       setSlug(generatedSlug);
     }
   };
@@ -72,7 +78,7 @@ function App() {
     e.preventDefault();
     if (!name || !slug || !price) return alert('Vui lòng điền đủ Tên, Slug và Giá!');
 
-    // Ràng buộc giá sản phẩm phải trên 100.000 đ
+    // Ràng buộc giá sản phẩm phải từ 100.000 đ trở lên
     if (Number(price) < 100000) {
       return alert('Giá sản phẩm phải từ 100.000 đ trở lên!');
     }
@@ -196,18 +202,17 @@ function App() {
                     type="text"
                     value={name}
                     onChange={handleNameChange}
-                    placeholder="VD: Váy ren trắng / Đầm lụa..."
+                    placeholder="VD: Váy nhung, Đầm lụa..."
                     style={{ width: '100%', padding: '10px 12px', border: '1px solid #CFC3B4', borderRadius: '8px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Slug * (Tối đa 5 ký tự)</label>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Slug * (Tự động tăng dần)</label>
                   <input
                     type="text"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
-                    maxLength={5}
-                    placeholder="VR001, DL001..."
+                    placeholder="VN01, DL01..."
                     style={{ width: '100%', padding: '10px 12px', border: '1px solid #CFC3B4', borderRadius: '8px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
                   />
                 </div>
@@ -277,7 +282,7 @@ function App() {
                   <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#fff', textAlign: 'left' }}>
                     <thead>
                       <tr style={{ backgroundColor: '#9C7E65', color: '#fff' }}>
-                        <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>ID</th>
+                        <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>STT</th>
                         <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>Tên váy</th>
                         <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>Kiểu dáng</th>
                         <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>Giá</th>
@@ -289,9 +294,11 @@ function App() {
                       {dresses.length === 0 ? (
                         <tr><td colSpan="6" style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>Chưa có mẫu váy nào.</td></tr>
                       ) : (
-                        dresses.map((item) => (
+                        dresses.map((item, index) => (
                           <tr key={item.id} style={{ borderBottom: '1px solid #EFE9E1' }}>
-                            <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4A3828' }}>{item.id}</td>
+                            {/* Hiển thị STT tăng dần từ 1, 2, 3... */}
+                            <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4A3828' }}>{index + 1}</td>
+                            
                             <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4A3828' }}>
                               <strong style={{ color: '#3D2E22' }}>{item.name}</strong>
                               <div style={{ fontSize: '12px', color: '#8C7765' }}>{item.slug}</div>
