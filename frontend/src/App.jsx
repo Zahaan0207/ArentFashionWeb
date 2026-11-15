@@ -19,7 +19,11 @@ function App() {
     setLoading(true);
     try {
       const res = await API.get('/api/dresses');
-      if (res.data.success) setDresses(res.data.data);
+      if (res.data.success) {
+        const sortedData = res.data.data.sort((a, b) => b.id - a.id);
+        
+        setDresses(sortedData);
+      }
     } catch (err) {
       alert('Lỗi tải dữ liệu: ' + (err.response?.data?.message || err.message));
     } finally {
@@ -34,15 +38,25 @@ function App() {
   const handleNameChange = (e) => {
     const val = e.target.value;
     setName(val);
+
     if (!editingId) {
-      const generatedSlug = val
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[đĐ]/g, 'd')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-');
+      const lowerName = val.toLowerCase();
+      let prefix = 'SP'; // Mặc định nếu không phải ren hay lụa
+
+      // Kiểm tra loại sản phẩm để gán tiền tố chuẩn 2 ký tự
+      if (lowerName.includes('ren')) {
+        prefix = 'VR'; // Váy Ren -> VR
+      } else if (lowerName.includes('lụa') || lowerName.includes('lua')) {
+        prefix = 'DL'; // Đầm Lụa -> DL
+      } else if (lowerName.includes('dạ hội') || lowerName.includes('da hoi')) {
+        prefix = 'DH'; // Dạ Hội -> DH
+      }
+
+      // Lấy ngẫu nhiên hoặc tạo số thứ tự 3 chữ số ngẫu nhiên từ 001-999 (hoặc bạn có thể tối ưu theo ý muốn)
+      // Để đảm bảo dưới 5 ký tự (VD: VR001 tối đa đúng 5 ký tự)
+      const randomNum = Math.floor(Math.random() * 900) + 100; // Số từ 100 đến 999
+      const generatedSlug = `${prefix}${randomNum}`.substring(0, 5); // Cắt chặt không bao giờ vượt quá 5 ký tự
+
       setSlug(generatedSlug);
     }
   };
@@ -61,6 +75,11 @@ function App() {
     e.preventDefault();
     if (!name || !slug || !price) return alert('Vui lòng điền đủ Tên, Slug và Giá!');
 
+    // KIỂM TRA GIÁ PHẢI TRÊN 100.000 đ
+    if (Number(price) < 100000) {
+      return alert('Giá sản phẩm phải từ 100.000 đ trở lên!');
+    }
+
     const payload = {
       name,
       slug,
@@ -69,6 +88,21 @@ function App() {
       stock_quantity: Number(stockQuantity),
       description
     };
+
+    try {
+      if (editingId) {
+        await API.put(`/api/dresses/${editingId}`, payload);
+        alert('Cập nhật váy dạ hội thành công!');
+      } else {
+        await API.post('/api/dresses', payload);
+        alert('Thêm mẫu váy mới thành công!');
+      }
+      resetForm();
+      fetchDresses();
+    } catch (err) {
+      alert('Lỗi: ' + (err.response?.data?.message || err.message));
+    }
+  };
 
     try {
       if (editingId) {
