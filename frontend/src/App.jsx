@@ -20,8 +20,8 @@ function App() {
     try {
       const res = await API.get('/api/dresses');
       if (res.data.success) {
-        // Sắp xếp ID giảm dần (mới nhất lên đầu)
-        const sortedData = res.data.data.sort((a, b) => b.id - a.id);
+        // Sắp xếp ID tăng dần: Thêm trước nằm trên (STT 1, 2...), thêm sau nằm dưới
+        const sortedData = res.data.data.sort((a, b) => a.id - b.id);
         setDresses(sortedData);
       }
     } catch (err) {
