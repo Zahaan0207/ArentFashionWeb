@@ -12,4 +12,8 @@ app.use('/api/dresses', dressRoutes);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Backend Server running on port ${PORT}`);
+}); 
+app.get('/', (req, res) => {
+  res.send('API ArentFashion đang hoạt động mượt mà!');
+ 
 });

@@ -7,7 +7,10 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'arent_fashion_db',
   port: process.env.DB_PORT || 3306,
-  ssl: process.env.DB_HOST.includes('tidbcloud.com') ? { rejectUnauthorized: true } : null
+  // Thêm dòng này để kết nối an toàn với TiDB Cloud trên Render
+  ssl: {
+    rejectUnauthorized: true
+  }
 });
 
 module.exports = pool;
