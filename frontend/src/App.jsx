@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import API from './api/axios';
+import logoImg from '../Pictures/logo.png';
 
 function App() {
   const [activeMenu, setActiveMenu] = useState('dresses');
@@ -139,7 +140,11 @@ function App() {
       {/* NAVBAR NGANG PHÍA TRÊN */}
       <header style={{ backgroundColor: '#9C7E65', color: '#fff', padding: '14px 28px', boxShadow: '0 2px 10px rgba(74, 56, 40, 0.14)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px', fontWeight: 'bold', letterSpacing: '0.8px', cursor: 'pointer' }} onClick={() => setActiveMenu('dashboard')}>
-          <span>👑</span>
+          <img
+            src={logoImg}
+            alt="Arent Fashion Logo"
+            style={{ height: '28px', width: 'auto', objectFit: 'contain' }}
+          />
           <span>Arent Fashion</span>
         </div>
         <nav style={{ display: 'flex', gap: '10px' }}>
