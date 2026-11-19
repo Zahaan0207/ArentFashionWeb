@@ -371,13 +371,17 @@ function App() {
                             <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4A3828' }}>{item.category}</td>
                             <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4A3828' }}>{Number(item.price).toLocaleString('vi-VN')} đ</td>
                             <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4A3828' }}>
-                              {item.stock_quantity > 0 ? (
-                                <span style={{ color: '#2F855A', backgroundColor: '#E6FFFA', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-                                  Còn hàng ({item.stock_quantity})
-                                </span>
-                              ) : (
+                              {Number(item.stock_quantity) <= 0 ? (
                                 <span style={{ color: '#C53030', backgroundColor: '#FFF5F5', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                                   Hết hàng
+                                </span>
+                              ) : Number(item.stock_quantity) <= 5 ? (
+                                <span style={{ color: '#B7791F', backgroundColor: '#FEFCBF', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                                  Sắp hết ({item.stock_quantity})
+                                </span>
+                              ) : (
+                                <span style={{ color: '#2F855A', backgroundColor: '#E6FFFA', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                                  Còn hàng ({item.stock_quantity})
                                 </span>
                               )}
                             </td>
