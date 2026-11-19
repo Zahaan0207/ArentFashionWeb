@@ -141,9 +141,6 @@ function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px', fontWeight: 'bold', letterSpacing: '0.8px', cursor: 'pointer' }} onClick={() => setActiveMenu('dashboard')}>
           <span>👑</span>
           <span>Arent Fashion</span>
-          <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.2px', backgroundColor: 'rgba(255,255,255,0.18)', padding: '3px 8px', borderRadius: '999px', fontWeight: '600' }}>
-            Admin
-          </span>
         </div>
         <nav style={{ display: 'flex', gap: '10px' }}>
           <button
@@ -198,125 +195,100 @@ function App() {
           )}
         </header>
 
-        {/* GIAO DIỆN DASHBOARD MỚI */}
+        {/* GIAO DIỆN DASHBOARD ĐƠN GIẢN */}
         {activeMenu === 'dashboard' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {/* Banner Chào mừng */}
-            <section style={{
-              background: 'linear-gradient(135deg, #FCF9F4 0%, #F2E8DA 100%)',
-              padding: '32px',
-              borderRadius: '16px',
-              border: '1px solid #DCD2C6',
-              boxShadow: '0 6px 18px rgba(92, 70, 52, 0.06)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '20px'
-            }}>
-              <div style={{ maxWidth: '680px' }}>
-                <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1.8px', color: '#9C7E65', fontWeight: '700', marginBottom: '8px' }}>
-                  Atelier & Inventory Control
-                </div>
-                <h3 style={{ margin: '0 0 10px 0', color: '#4A3828', fontSize: '24px', fontFamily: 'Georgia, serif' }}>
-                  Chào mừng đến với Arent Fashion Admin
-                </h3>
-                <p style={{ color: '#6E5846', margin: 0, lineHeight: '1.65', fontSize: '15px' }}>
-                  Hệ thống quản lý cửa hàng thời trang cao cấp kết nối trực tiếp với cơ sở dữ liệu trên mây. Dễ dàng thêm mới, cập nhật giá thuê/bán và theo dõi tồn kho từng thiết kế váy dạ hội.
-                </p>
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Khung chào mừng */}
+            <div style={{ backgroundColor: '#FAF7F2', padding: '24px 28px', borderRadius: '12px', border: '1px solid #DCD2C6', boxShadow: '0 4px 12px rgba(92, 70, 52, 0.05)' }}>
+              <h3 style={{ margin: '0 0 8px 0', color: '#7A5E46', fontSize: '20px' }}>
+                Chào mừng đến với Arent Fashion Admin
+              </h3>
+              <p style={{ color: '#6E5846', margin: '0 0 18px 0', lineHeight: '1.6', fontSize: '14px' }}>
+                Quản lý danh sách váy dạ hội, giá thuê/bán và số lượng tồn kho của cửa hàng.
+              </p>
               <button
                 onClick={() => setActiveMenu('dresses')}
-                style={{ padding: '12px 24px', backgroundColor: '#9C7E65', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '600', fontSize: '15px', boxShadow: '0 4px 10px rgba(156, 126, 101, 0.28)' }}
+                style={{ padding: '10px 20px', backgroundColor: '#9C7E65', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
               >
-                Mở Quản lý Váy Dạ Hội →
+                Mở Quản lý Váy Dạ Hội
               </button>
-            </section>
+            </div>
 
-            {/* 3 Thẻ Chỉ Số Nhanh */}
-            <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
-              <div style={{ backgroundColor: '#FAF7F2', padding: '22px', borderRadius: '14px', border: '1px solid #DCD2C6', boxShadow: '0 4px 12px rgba(92, 70, 52, 0.05)' }}>
-                <div style={{ fontSize: '13px', color: '#8C7765', fontWeight: '600', marginBottom: '8px' }}>👗 Tổng mẫu thiết kế</div>
-                <div style={{ fontSize: '28px', fontWeight: '700', color: '#4A3828' }}>{totalModels} <span style={{ fontSize: '14px', fontWeight: '500', color: '#7A5E46' }}>mẫu váy</span></div>
+            {/* 3 ô thống kê đơn giản */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              <div style={{ backgroundColor: '#FAF7F2', padding: '20px', borderRadius: '12px', border: '1px solid #DCD2C6', boxShadow: '0 4px 12px rgba(92, 70, 52, 0.05)' }}>
+                <div style={{ fontSize: '13px', color: '#8C7765', marginBottom: '6px' }}>Tổng số mẫu váy</div>
+                <div style={{ fontSize: '24px', fontWeight: '700', color: '#4A3828' }}>{totalModels}</div>
               </div>
 
-              <div style={{ backgroundColor: '#FAF7F2', padding: '22px', borderRadius: '14px', border: '1px solid #DCD2C6', boxShadow: '0 4px 12px rgba(92, 70, 52, 0.05)' }}>
-                <div style={{ fontSize: '13px', color: '#8C7765', fontWeight: '600', marginBottom: '8px' }}>📦 Tổng số lượng tồn kho</div>
-                <div style={{ fontSize: '28px', fontWeight: '700', color: '#4A3828' }}>{totalStock} <span style={{ fontSize: '14px', fontWeight: '500', color: '#7A5E46' }}>sản phẩm</span></div>
+              <div style={{ backgroundColor: '#FAF7F2', padding: '20px', borderRadius: '12px', border: '1px solid #DCD2C6', boxShadow: '0 4px 12px rgba(92, 70, 52, 0.05)' }}>
+                <div style={{ fontSize: '13px', color: '#8C7765', marginBottom: '6px' }}>Tổng tồn kho</div>
+                <div style={{ fontSize: '24px', fontWeight: '700', color: '#4A3828' }}>{totalStock}</div>
               </div>
 
-              <div style={{ backgroundColor: '#FAF7F2', padding: '22px', borderRadius: '14px', border: '1px solid #DCD2C6', boxShadow: '0 4px 12px rgba(92, 70, 52, 0.05)' }}>
-                <div style={{ fontSize: '13px', color: '#8C7765', fontWeight: '600', marginBottom: '8px' }}>⚠️ Mẫu hết hàng</div>
-                <div style={{ fontSize: '28px', fontWeight: '700', color: outOfStockCount > 0 ? '#C53030' : '#2F855A' }}>
-                  {outOfStockCount} <span style={{ fontSize: '14px', fontWeight: '500', color: '#7A5E46' }}>mẫu</span>
+              <div style={{ backgroundColor: '#FAF7F2', padding: '20px', borderRadius: '12px', border: '1px solid #DCD2C6', boxShadow: '0 4px 12px rgba(92, 70, 52, 0.05)' }}>
+                <div style={{ fontSize: '13px', color: '#8C7765', marginBottom: '6px' }}>Mẫu hết hàng</div>
+                <div style={{ fontSize: '24px', fontWeight: '700', color: outOfStockCount > 0 ? '#C53030' : '#4A3828' }}>
+                  {outOfStockCount}
                 </div>
               </div>
-            </section>
-
-            {/* Thẻ Lối Tắt Chức Năng */}
-            <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-              <div style={{ backgroundColor: '#FAF7F2', padding: '24px', borderRadius: '14px', border: '1px solid #DCD2C6', boxShadow: '0 4px 12px rgba(92, 70, 52, 0.05)' }}>
-                <h4 style={{ margin: '0 0 8px 0', color: '#7A5E46', fontSize: '17px' }}>Quản lý danh mục & Slug tự động</h4>
-                <p style={{ margin: '0 0 16px 0', color: '#6E5846', fontSize: '14px', lineHeight: '1.5' }}>
-                  Tạo mã slug tự động theo tên váy, phân loại kiểu dáng (Đuôi cá, Đầm Công Chúa, Xẻ tà...) và cập nhật bảng giá từ 100.000đ.
-                </p>
-                <button
-                  onClick={() => setActiveMenu('dresses')}
-                  style={{ padding: '8px 16px', backgroundColor: '#EFE7DC', color: '#5C4634', border: '1px solid #D5C7B6', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}
-                >
-                  Đi tới danh sách váy →
-                </button>
-              </div>
-
-              <div style={{ backgroundColor: '#FAF7F2', padding: '24px', borderRadius: '14px', border: '1px solid #DCD2C6', boxShadow: '0 4px 12px rgba(92, 70, 52, 0.05)' }}>
-                <h4 style={{ margin: '0 0 8px 0', color: '#7A5E46', fontSize: '17px' }}>Trạng thái đồng bộ Cloud</h4>
-                <p style={{ margin: '0 0 16px 0', color: '#6E5846', fontSize: '14px', lineHeight: '1.5' }}>
-                  Kết nối API `/api/dresses` đang hoạt động. Mọi thao tác thêm, sửa, xóa đều được lưu trực tiếp lên hệ thống.
-                </p>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#E6FFFA', color: '#2F855A', padding: '6px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: '700' }}>
-                  ● Sẵn sàng hoạt động
-                </span>
-              </div>
-            </section>
+            </div>
           </div>
         )}
 
         {/* GIAO DIỆN QUẢN LÝ VÁY DẠ HỘI */}
         {activeMenu === 'dresses' && (
           <div>
-            {/* FORM CRUD */}
-            <form onSubmit={handleSubmit} style={{ backgroundColor: '#FAF7F2', padding: '24px', borderRadius: '14px', marginBottom: '24px', border: '1px solid #DCD2C6', boxShadow: '0 4px 12px rgba(92, 70, 52, 0.05)' }}>
-              <h3 style={{ marginBottom: '20px', color: '#7A5E46', fontSize: '18px', fontWeight: '700' }}>
+            {/* FORM CRUD (3 CỘT x 2 HÀNG + NÚT GÓC DƯỚI BÊN PHẢI) */}
+            <form
+              onSubmit={handleSubmit}
+              style={{
+                backgroundColor: '#FAF7F2',
+                padding: '24px 28px',
+                borderRadius: '14px',
+                marginBottom: '24px',
+                border: '1px solid #DCD2C6',
+                boxShadow: '0 4px 12px rgba(92, 70, 52, 0.05)'
+              }}
+            >
+              <h3 style={{ marginBottom: '20px', color: '#6E5846', fontSize: '18px', fontWeight: '700' }}>
                 {editingId ? `Cập nhật mẫu váy #${editingId}` : 'Thêm mẫu váy dạ hội mới'}
               </h3>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '18px 24px',
+                  marginBottom: '22px'
+                }}
+              >
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Tên váy *</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Tên váy *</label>
                   <input
                     type="text"
                     value={name}
                     onChange={handleNameChange}
                     placeholder="VD: Váy nhung, Đầm lụa..."
-                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #CFC3B4', borderRadius: '8px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '10px 14px', border: '1px solid #D6CBBF', borderRadius: '10px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Slug * (Tự động tăng dần)</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Slug * (Tự động tăng dần)</label>
                   <input
                     type="text"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
                     placeholder="VN01, DL01..."
-                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #CFC3B4', borderRadius: '8px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '10px 14px', border: '1px solid #D6CBBF', borderRadius: '10px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Kiểu dáng</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Kiểu dáng</label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #CFC3B4', borderRadius: '8px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '10px 14px', border: '1px solid #D6CBBF', borderRadius: '10px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
                   >
                     <option value="Đuôi cá">Đuôi cá</option>
                     <option value="Đầm Công Chúa">Đầm Công Chúa</option>
@@ -325,45 +297,45 @@ function App() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Giá thuê/bán (VND) * (≥ 100k)</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Giá thuê/bán (VND) * (≥ 100k)</label>
                   <input
                     type="number"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="300000"
-                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #CFC3B4', borderRadius: '8px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '10px 14px', border: '1px solid #D6CBBF', borderRadius: '10px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Số lượng</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Số lượng</label>
                   <input
                     type="number"
                     value={stockQuantity}
                     onChange={(e) => setStockQuantity(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #CFC3B4', borderRadius: '8px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '10px 14px', border: '1px solid #D6CBBF', borderRadius: '10px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Mô tả</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#5C4634' }}>Mô tả</label>
                   <input
                     type="text"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Chất liệu cao cấp..."
-                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #CFC3B4', borderRadius: '8px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '10px 14px', border: '1px solid #D6CBBF', borderRadius: '10px', backgroundColor: '#fff', color: '#3D2E22', fontSize: '14px', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button type="submit" style={{ padding: '10px 22px', backgroundColor: '#9C7E65', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>
-                  {editingId ? 'Lưu thay đổi' : 'Thêm mới'}
-                </button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 {editingId && (
                   <button type="button" onClick={resetForm} style={{ padding: '10px 22px', backgroundColor: '#8C7765', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>
                     Hủy
                   </button>
                 )}
+                <button type="submit" style={{ padding: '10px 24px', backgroundColor: '#8C7057', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>
+                  {editingId ? 'Lưu thay đổi' : 'Thêm mới'}
+                </button>
               </div>
             </form>
 
