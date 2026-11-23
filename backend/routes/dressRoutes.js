@@ -46,7 +46,7 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params;
   try {
     await db.query('DELETE FROM dresses WHERE id = ?', [id]);
-    res.json({ success: true, message: 'Xóa thành công' });
+    res.json({ success: true, message: 'Xóa thành công' }); 
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
