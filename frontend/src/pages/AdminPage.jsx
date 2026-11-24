@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
-import logoImg from '../../Pictures/adminIMG/logo.png';
-import './AdminPage.css';
+import logoImg from '../../Pictures/logo.png';
 
-function AdminPage({ onLogout }) {
+function AdminPage({ user, onLogout }) {
   const [activeMenu, setActiveMenu] = useState('dresses');
   const [dresses, setDresses] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Tìm kiếm & lọc trong bảng quản lý
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
 
@@ -26,7 +24,6 @@ function AdminPage({ onLogout }) {
     try {
       const res = await API.get('/api/dresses');
       if (res.data.success) {
-        // Sắp xếp ID tăng dần: Thêm trước nằm trên (STT 1, 2...), thêm sau nằm dưới
         const sortedData = res.data.data.sort((a, b) => a.id - b.id);
         setDresses(sortedData);
       }
@@ -41,7 +38,6 @@ function AdminPage({ onLogout }) {
     fetchDresses();
   }, []);
 
-  // Lọc danh sách váy theo từ khóa và kiểu dáng
   const filteredDresses = dresses.filter((item) => {
     const matchName =
       item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -51,12 +47,10 @@ function AdminPage({ onLogout }) {
     return matchName && matchCategory;
   });
 
-  // Tính nhanh số liệu tổng quan từ dữ liệu thực tế
   const totalModels = dresses.length;
   const totalStock = dresses.reduce((sum, item) => sum + Number(item.stock_quantity || 0), 0);
   const outOfStockCount = dresses.filter(item => Number(item.stock_quantity) <= 0).length;
 
-  // Tự động sinh Slug: Lấy ký tự đầu viết hoa + Tăng dần số thứ tự (01, 02...)
   const handleNameChange = (e) => {
     const val = e.target.value;
     setName(val);
@@ -80,8 +74,7 @@ function AdminPage({ onLogout }) {
       const nextNumber = existingCount + 1;
       const formattedNum = String(nextNumber).padStart(2, '0');
 
-      const generatedSlug = `${prefix}${formattedNum}`;
-      setSlug(generatedSlug);
+      setSlug(`${prefix}${formattedNum}`);
     }
   };
 
@@ -99,7 +92,6 @@ function AdminPage({ onLogout }) {
     e.preventDefault();
     if (!name || !slug || !price) return alert('Vui lòng điền đủ Tên, Slug và Giá!');
 
-    // Ràng buộc giá sản phẩm phải từ 100.000 đ trở lên
     if (Number(price) < 100000) {
       return alert('Giá sản phẩm phải từ 100.000 đ trở lên!');
     }
@@ -152,8 +144,7 @@ function AdminPage({ onLogout }) {
   };
 
   return (
-    <div className="admin-page" style={{ minHeight: '100vh', backgroundColor: '#FBF3F1', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif', color: '#4B3635' }}>
-      {/* NAVBAR NGANG PHÍA TRÊN */}
+    <div style={{ minHeight: '100vh', backgroundColor: '#FBF3F1', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif', color: '#4B3635' }}>
       <header style={{ backgroundColor: '#A9827E', color: '#fff', padding: '14px 28px', boxShadow: '0 2px 10px rgba(75, 54, 53, 0.14)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px', fontWeight: 'bold', letterSpacing: '0.8px', cursor: 'pointer' }} onClick={() => setActiveMenu('dashboard')}>
           <img
@@ -194,6 +185,12 @@ function AdminPage({ onLogout }) {
             Quản lý Váy Dạ Hội
           </button>
 
+          {user?.username && (
+            <span style={{ fontSize: '13px', opacity: 0.95 }}>
+              Admin: <strong>{user.username}</strong>
+            </span>
+          )}
+
           {onLogout && (
             <button
               onClick={onLogout}
@@ -214,7 +211,6 @@ function AdminPage({ onLogout }) {
       </header>
 
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
-        {/* HEADER TRANG */}
         <header style={{ backgroundColor: '#FFFDFC', padding: '20px 24px', borderRadius: '14px', marginBottom: '24px', border: '1px solid #E6D5D2', boxShadow: '0 4px 12px rgba(169, 130, 126, 0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h2 style={{ color: '#946C68', fontSize: '26px', fontFamily: 'Georgia, serif', margin: '0 0 6px 0' }}>
@@ -234,10 +230,8 @@ function AdminPage({ onLogout }) {
           )}
         </header>
 
-        {/* GIAO DIỆN DASHBOARD ĐƠN GIẢN */}
         {activeMenu === 'dashboard' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* Khung chào mừng */}
             <div style={{ backgroundColor: '#FFFDFC', padding: '24px 28px', borderRadius: '12px', border: '1px solid #E6D5D2', boxShadow: '0 4px 12px rgba(169, 130, 126, 0.08)' }}>
               <h3 style={{ margin: '0 0 8px 0', color: '#8A6562', fontSize: '20px' }}>
                 Chào mừng đến với Arent Fashion Admin
@@ -253,7 +247,6 @@ function AdminPage({ onLogout }) {
               </button>
             </div>
 
-            {/* 3 ô thống kê đơn giản */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
               <div style={{ backgroundColor: '#FFFDFC', padding: '20px', borderRadius: '12px', border: '1px solid #E6D5D2', boxShadow: '0 4px 12px rgba(169, 130, 126, 0.08)' }}>
                 <div style={{ fontSize: '13px', color: '#946C68', marginBottom: '6px' }}>Tổng số mẫu váy</div>
@@ -275,10 +268,8 @@ function AdminPage({ onLogout }) {
           </div>
         )}
 
-        {/* GIAO DIỆN QUẢN LÝ VÁY DẠ HỘI */}
         {activeMenu === 'dresses' && (
           <div>
-            {/* FORM CRUD (3 CỘT x 2 HÀNG + NÚT GÓC DƯỚI BÊN PHẢI) */}
             <form
               onSubmit={handleSubmit}
               style={{
@@ -378,7 +369,6 @@ function AdminPage({ onLogout }) {
               </div>
             </form>
 
-            {/* BẢNG HIỂN THỊ + TÌM KIẾM */}
             <div style={{ backgroundColor: '#FFFDFC', padding: '24px', borderRadius: '14px', border: '1px solid #E6D5D2', boxShadow: '0 4px 12px rgba(169, 130, 126, 0.08)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
                 <h3 style={{ margin: 0, color: '#8A6562', fontSize: '18px', fontWeight: '700' }}>

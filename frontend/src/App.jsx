@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import LoginPage from './pages/login/LoginPage';
-import AdminPage from './admin/AdminPage';
-import UserShop from './user/UserShop';
+import LoginPage from './pages/LoginPage';
+import Signup from './pages/Signup';
+import AdminPage from './pages/AdminPage';
+import UserShop from './pages/UserShop';
 
 const STORAGE_KEY = 'arent_current_user';
 
 function App() {
+  const [authScreen, setAuthScreen] = useState('login'); // 'login' | 'signup'
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -26,6 +28,7 @@ function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setAuthScreen('login');
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
@@ -34,7 +37,21 @@ function App() {
   };
 
   if (!currentUser) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+    if (authScreen === 'signup') {
+      return (
+        <Signup
+          onSignupSuccess={handleLoginSuccess}
+          onSwitchToLogin={() => setAuthScreen('login')}
+        />
+      );
+    }
+
+    return (
+      <LoginPage
+        onLoginSuccess={handleLoginSuccess}
+        onSwitchToSignup={() => setAuthScreen('signup')}
+      />
+    );
   }
 
   if (currentUser.role === 'admin') {

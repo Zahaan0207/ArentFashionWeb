@@ -1,15 +1,58 @@
-* {
+/* --- RESET & GIAO DIỆN CHUNG CHO ARENT FASHION --- */
+body {
   margin: 0;
   padding: 0;
+  background-color: #FBF3F1;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #4B3635;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
   box-sizing: border-box;
 }
 
-body {
-  font-family: system-ui, -apple-system, sans-serif;
-  background-color: #fdf2f8;
-  color: #1e293b;
+/* --- TÙY CHỈNH THANH CUỘN (SCROLLBAR) --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+::-webkit-scrollbar-track {
+  background: #FFFDFC;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #DFC9C5;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A9827E;
+}
+
+/* --- HIỆU ỨNG VÀ TABLE HOVER --- */
+table tr {
+  transition: background-color 0.2s ease;
+}
+
+table tbody tr:hover {
+  background-color: #FAF0EE;
+}
+
+/* --- INPUT & SELECT FOCUS EFFECTS --- */
+input:focus, select:focus {
+  outline: none;
+  border-color: #A9827E !important;
+  box-shadow: 0 0 0 3px rgba(169, 130, 126, 0.18);
+}
+
+/* --- BUTTON HOVER EFFECTS --- */
+button {
+  transition: all 0.2s ease;
+}
+
+button:active {
+  transform: scale(0.98);
 }
