@@ -41,10 +41,10 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
         color: '#4B3635'
       }}
     >
-{/* Chữ "Welcome to" phía trên */}
+      {/* Chữ "Welcome to" phía trên */}
       <h1
         style={{
-          margin: '14px 0 4px 0',
+          margin: '70px 0 4px 0', // dời xuống thêm ~1.5cm (≈ 56px)
           fontSize: '44px',
           fontFamily: 'Georgia, serif',
           fontWeight: '700',
@@ -57,11 +57,11 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
         Welcome to
       </h1>
 
-{/* Ảnh trang trí phía trên khung form (logodnhap1.png) */}
+      {/* Ảnh trang trí phía trên khung form (logodnhap1.png) */}
       <div
         style={{
           marginBottom: '-92px',
-          transform: 'translateY(70px)', // dời xuống thêm ~1cm (≈ 40px)
+          transform: 'translateY(50px)', // đi lên ~0.5cm so với mức 70px
           zIndex: 2,
           textAlign: 'center',
           width: '100%',
@@ -92,7 +92,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           backgroundColor: '#FAF0E4',
           border: '1.5px solid #B68F8B',
           borderRadius: '26px',
-          padding: '140px 32px 0 32px',
+          padding: '124px 32px 0 32px',
           boxShadow: '0 8px 22px rgba(120, 86, 82, 0.14)',
           boxSizing: 'border-box',
           overflow: 'hidden',
