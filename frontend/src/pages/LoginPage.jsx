@@ -57,15 +57,15 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
         Welcome to
       </h1>
 
-    {/* Ảnh trang trí phía trên khung form (logodnhap1.png) */}
+{/* Ảnh trang trí phía trên khung form (logodnhap1.png) */}
       <div
         style={{
           marginBottom: '-92px',
-          transform: 'translateY(10px)',
+          transform: 'translateY(70px)', // dời xuống thêm ~1cm (≈ 40px)
           zIndex: 2,
           textAlign: 'center',
           width: '100%',
-          maxWidth: '486px', // tăng thêm ~1.5cm (≈ 56px)
+          maxWidth: '486px',
           pointerEvents: 'none'
         }}
       >
@@ -75,7 +75,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           style={{
             width: '100%',
             height: 'auto',
-            maxHeight: '286px', // tăng thêm ~1.5cm (≈ 56px) để ảnh phóng to đúng tỷ lệ
+            maxHeight: '286px',
             objectFit: 'contain',
             display: 'block',
             margin: '0 auto',
@@ -88,11 +88,11 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
       <div
         style={{
           width: '100%',
-          maxWidth: '430px',
+          maxWidth: '390px',
           backgroundColor: '#FAF0E4',
           border: '1.5px solid #B68F8B',
           borderRadius: '26px',
-          padding: '78px 32px 0 32px',
+          padding: '140px 32px 0 32px',
           boxShadow: '0 8px 22px rgba(120, 86, 82, 0.14)',
           boxSizing: 'border-box',
           overflow: 'hidden',
@@ -100,6 +100,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           zIndex: 1
         }}
       >
+
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '7px', fontSize: '14px', fontWeight: '600', color: '#4B3635' }}>
