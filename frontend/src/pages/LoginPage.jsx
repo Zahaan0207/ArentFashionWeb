@@ -41,10 +41,10 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
         color: '#4B3635'
       }}
     >
-      {/* Chữ "Welcome to" phía trên */}
+     {/* Chữ "Welcome to" phía trên */}
       <h1
         style={{
-          margin: '70px 0 4px 0', // dời xuống thêm ~1.5cm (≈ 56px)
+          margin: '12px 0 6px 0',
           fontSize: '44px',
           fontFamily: 'Georgia, serif',
           fontWeight: '700',
@@ -60,12 +60,12 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
       {/* Ảnh trang trí phía trên khung form (logodnhap1.png) */}
       <div
         style={{
-          marginBottom: '-92px',
-          transform: 'translateY(50px)', // đi lên ~0.5cm so với mức 70px
+          marginBottom: '-155px',
+          transform: 'translateY(8px)',
           zIndex: 2,
           textAlign: 'center',
           width: '100%',
-          maxWidth: '486px',
+          maxWidth: '470px',
           pointerEvents: 'none'
         }}
       >
@@ -74,9 +74,8 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           alt="Arent Dress Rental"
           style={{
             width: '100%',
-            height: 'auto',
-            maxHeight: '286px',
-            objectFit: 'contain',
+            height: '265px',
+            objectFit: 'fill',
             display: 'block',
             margin: '0 auto',
             mixBlendMode: 'multiply'
@@ -90,9 +89,9 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           width: '100%',
           maxWidth: '390px',
           backgroundColor: '#FAF0E4',
-          border: '1.5px solid #B68F8B',
+          border: '3px solid #A47974',
           borderRadius: '26px',
-          padding: '124px 32px 0 32px',
+          padding: '152px 32px 0 32px',
           boxShadow: '0 8px 22px rgba(120, 86, 82, 0.14)',
           boxSizing: 'border-box',
           overflow: 'hidden',
