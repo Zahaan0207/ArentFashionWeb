@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
-import logoImg from '../../Pictures/logo.png';
+import logoImg from '../../Pictures/adminIMG/logo.png';
 import './AdminPage.css';
 
 function AdminPage({ onLogout }) {
