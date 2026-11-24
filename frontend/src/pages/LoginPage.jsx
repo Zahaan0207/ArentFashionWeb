@@ -57,15 +57,15 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
         Welcome to
       </h1>
 
-      {/* Ảnh trang trí phía trên khung form (logodnhap1.png) */}
+    {/* Ảnh trang trí phía trên khung form (logodnhap1.png) */}
       <div
         style={{
-          marginBottom: '-84px',
+          marginBottom: '-92px',
           transform: 'translateY(10px)',
           zIndex: 2,
           textAlign: 'center',
           width: '100%',
-          maxWidth: '430px', // tăng ~40px (≈ 1cm)
+          maxWidth: '486px', // tăng thêm ~1.5cm (≈ 56px)
           pointerEvents: 'none'
         }}
       >
@@ -75,7 +75,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           style={{
             width: '100%',
             height: 'auto',
-            maxHeight: '230px', // tăng ~40px (≈ 1cm) để không bị giới hạn chiều cao
+            maxHeight: '286px', // tăng thêm ~1.5cm (≈ 56px) để ảnh phóng to đúng tỷ lệ
             objectFit: 'contain',
             display: 'block',
             margin: '0 auto',
