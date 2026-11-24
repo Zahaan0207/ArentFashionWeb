@@ -65,7 +65,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           zIndex: 2,
           textAlign: 'center',
           width: '100%',
-          maxWidth: '390px',
+          maxWidth: '430px',
           pointerEvents: 'none'
         }}
       >
@@ -88,7 +88,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
       <div
         style={{
           width: '100%',
-          maxWidth: '390px',
+          maxWidth: '430px',
           backgroundColor: '#FAF0E4',
           border: '1.5px solid #B68F8B',
           borderRadius: '26px',
