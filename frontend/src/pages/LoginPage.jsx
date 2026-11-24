@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import logoImg from '../../Pictures/logo.png';
+import logoDnhap1 from '../../Pictures/logodnhap1.png';
+import logoDnhap2 from '../../Pictures/logodnhap2.png';
 
 function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
   const [username, setUsername] = useState('');
@@ -40,9 +41,10 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
         color: '#4B3635'
       }}
     >
+      {/* Chữ "Welcome to" phía trên */}
       <h1
         style={{
-          margin: '0 0 8px 0',
+          margin: '0 0 4px 0',
           fontSize: '42px',
           fontFamily: 'Georgia, serif',
           fontWeight: '700',
@@ -54,38 +56,31 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
         Welcome to
       </h1>
 
-      <div style={{ marginBottom: '-24px', zIndex: 2, textAlign: 'center' }}>
-        <div
+      {/* Ảnh trang trí phía trên khung form (logodnhap1.png) */}
+      <div
+        style={{
+          marginBottom: '-36px',
+          zIndex: 2,
+          textAlign: 'center',
+          width: '100%',
+          maxWidth: '420px'
+        }}
+      >
+        <img
+          src={logoDnhap1}
+          alt="Arent Dress Rental"
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            backgroundColor: '#FFFDFC',
-            border: '1.5px solid #C69F9A',
-            borderRadius: '999px',
-            padding: '8px 22px',
-            boxShadow: '0 4px 12px rgba(169, 130, 126, 0.14)'
+            width: '100%',
+            maxHeight: '175px',
+            objectFit: 'contain',
+            display: 'block',
+            margin: '0 auto',
+            mixBlendMode: 'multiply'
           }}
-        >
-          <img
-            src={logoImg}
-            alt="Arent Fashion Logo"
-            style={{ height: '26px', width: 'auto', objectFit: 'contain' }}
-          />
-          <span
-            style={{
-              fontFamily: 'Georgia, serif',
-              fontStyle: 'italic',
-              fontSize: '22px',
-              fontWeight: '700',
-              color: '#A9827E'
-            }}
-          >
-            Arent Fashion
-          </span>
-        </div>
+        />
       </div>
 
+      {/* Thẻ form chính */}
       <div
         style={{
           width: '100%',
@@ -93,9 +88,10 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           backgroundColor: '#FAF0E4',
           border: '1.5px solid #B68F8B',
           borderRadius: '26px',
-          padding: '44px 32px 28px 32px',
+          padding: '44px 32px 0 32px',
           boxShadow: '0 8px 22px rgba(120, 86, 82, 0.14)',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          overflow: 'hidden'
         }}
       >
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -189,7 +185,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           </button>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '18px', fontSize: '13px', color: '#4B3635' }}>
+        <div style={{ textAlign: 'center', marginTop: '16px', marginBottom: '10px', fontSize: '13px', color: '#4B3635' }}>
           Tình yêu có tài khoản chưa?{' '}
           <button
             type="button"
@@ -206,6 +202,21 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           >
             Đăng ký ngay đi!
           </button>
+        </div>
+
+        {/* Ảnh trang trí đáy khung form (logodnhap2.png) */}
+        <div style={{ margin: '0 -32px' }}>
+          <img
+            src={logoDnhap2}
+            alt="Floral & Butterfly Border"
+            style={{
+              width: '100%',
+              maxHeight: '76px',
+              objectFit: 'cover',
+              display: 'block',
+              mixBlendMode: 'multiply'
+            }}
+          />
         </div>
       </div>
     </div>
