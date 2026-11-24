@@ -36,7 +36,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '28px 16px',
+        padding: '24px 16px 36px 16px',
         fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
         color: '#4B3635'
       }}
@@ -44,13 +44,14 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
       {/* Chữ "Welcome to" phía trên */}
       <h1
         style={{
-          margin: '0 0 4px 0',
-          fontSize: '42px',
+          margin: '0 0 2px 0',
+          fontSize: '44px',
           fontFamily: 'Georgia, serif',
           fontWeight: '700',
           color: '#A47974',
           letterSpacing: '0.5px',
-          textAlign: 'center'
+          textAlign: 'center',
+          lineHeight: 1.15
         }}
       >
         Welcome to
@@ -59,11 +60,12 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
       {/* Ảnh trang trí phía trên khung form (logodnhap1.png) */}
       <div
         style={{
-          marginBottom: '-36px',
+          marginBottom: '-42px',
           zIndex: 2,
           textAlign: 'center',
           width: '100%',
-          maxWidth: '420px'
+          maxWidth: '360px',
+          pointerEvents: 'none'
         }}
       >
         <img
@@ -71,7 +73,8 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           alt="Arent Dress Rental"
           style={{
             width: '100%',
-            maxHeight: '175px',
+            height: 'auto',
+            maxHeight: '185px',
             objectFit: 'contain',
             display: 'block',
             margin: '0 auto',
@@ -88,10 +91,12 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           backgroundColor: '#FAF0E4',
           border: '1.5px solid #B68F8B',
           borderRadius: '26px',
-          padding: '44px 32px 0 32px',
+          padding: '46px 32px 0 32px',
           boxShadow: '0 8px 22px rgba(120, 86, 82, 0.14)',
           boxSizing: 'border-box',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          position: 'relative',
+          zIndex: 1
         }}
       >
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -185,7 +190,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
           </button>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '16px', marginBottom: '10px', fontSize: '13px', color: '#4B3635' }}>
+        <div style={{ textAlign: 'center', marginTop: '14px', marginBottom: '8px', fontSize: '13px', color: '#4B3635', position: 'relative', zIndex: 2 }}>
           Tình yêu có tài khoản chưa?{' '}
           <button
             type="button"
@@ -205,14 +210,21 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
         </div>
 
         {/* Ảnh trang trí đáy khung form (logodnhap2.png) */}
-        <div style={{ margin: '0 -32px' }}>
+        <div
+          style={{
+            margin: '0 -32px',
+            lineHeight: 0,
+            pointerEvents: 'none'
+          }}
+        >
           <img
             src={logoDnhap2}
             alt="Floral & Butterfly Border"
             style={{
               width: '100%',
-              maxHeight: '76px',
+              height: '108px',
               objectFit: 'cover',
+              objectPosition: 'center bottom',
               display: 'block',
               mixBlendMode: 'multiply'
             }}
