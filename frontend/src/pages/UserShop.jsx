@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import API from '../api/axios';
 import logoImg from '../../Pictures/logo.png';
+import sampleDressImg from '../../Pictures/DDCAK.jpg';
 import heroCardImg from '../assets/figma/hero-card.png';
 import floralTlImg from '../assets/figma/floral-tl.png';
 import floralBrImg from '../assets/figma/floral-br.png';
@@ -12,7 +13,6 @@ import catBowImg from '../assets/figma/cat-bow.png';
 import catEarringImg from '../assets/figma/cat-earring.png';
 import catShoesImg from '../assets/figma/cat-shoes.png';
 import catDoveImg from '../assets/figma/cat-dove.png';
-import sampleDressImg from '../assets/figma/sample-dress.png';
 
 const DRESS_CATEGORIES = ['Tất cả', 'Đầm dạ hội dài', 'Đầm xẻ tà', 'Đầm công chúa', 'Áo choàng lông thú'];
 const ACCESSORY_CATEGORIES = ['Cài tóc', 'Dây chuyền', 'Bông tai', 'Giày'];
@@ -846,6 +846,11 @@ function UserShop({ user, onLogout }) {
                       <img
                         src={item.hinh_anh || sampleDressImg}
                         alt={item.ten_sp}
+                        onError={(e) => {
+                          if (e.currentTarget.src !== sampleDressImg) {
+                            e.currentTarget.src = sampleDressImg;
+                          }
+                        }}
                         style={{
                           width: '100%',
                           height: '100%',
