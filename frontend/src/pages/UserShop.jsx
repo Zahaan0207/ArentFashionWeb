@@ -30,9 +30,10 @@ function UserShop({ user, onLogout }) {
   const [cartItems, setCartItems] = useState([]);
 
   const [selectedDress, setSelectedDress] = useState(null);
+  const [quantity, setQuantity] = useState(1);
   const [customerName, setCustomerName] = useState(user?.fullName || user?.username || '');
   const [customerPhone, setCustomerPhone] = useState(user?.phone || '');
-  const [bookingDate, setBookingDate] = useState('');
+  const [shippingAddress, setShippingAddress] = useState('');
 
   const featuredRef = useRef(null);
   const footerRef = useRef(null);
@@ -76,24 +77,51 @@ function UserShop({ user, onLogout }) {
     featuredRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleAddToCart = (item) => {
+  const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCartAmount = cartItems.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+
+  const handleAddToCart = (item, qty = 1) => {
     setCartItems((prev) => {
-      if (prev.some((c) => c.id === item.id)) return prev;
-      return [...prev, item];
+      const existing = prev.find((c) => c.id === item.id);
+      if (existing) {
+        return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + qty } : c));
+      }
+      return [...prev, { ...item, quantity: qty }];
     });
   };
 
-  const handleBookingSubmit = (e) => {
+  const handleUpdateCartQty = (id, delta) => {
+    setCartItems((prev) =>
+      prev
+        .map((c) => (c.id === id ? { ...c, quantity: c.quantity + delta } : c))
+        .filter((c) => c.quantity > 0)
+    );
+  };
+
+  const handlePurchaseSubmit = (e) => {
     e.preventDefault();
-    if (!customerName || !customerPhone) {
-      return alert('Vui lòng nhập Họ tên và Số điện thoại để đặt lịch!');
+    if (!customerName.trim() || !customerPhone.trim() || !shippingAddress.trim()) {
+      return alert('Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ giao hàng!');
     }
-    handleAddToCart(selectedDress);
+    const orderTotal = Number(selectedDress.price) * quantity;
     alert(
-      `Đã ghi nhận yêu cầu thử/thuê mẫu "${selectedDress.name}" cho ${customerName} (${customerPhone}). Cửa hàng sẽ liên hệ xác nhận sớm!`
+      `Đặt mua thành công ${quantity}x "${selectedDress.name}" (${orderTotal.toLocaleString('vi-VN')}VND) cho ${customerName} (${customerPhone}) tại "${shippingAddress}". Cửa hàng sẽ sớm giao hàng cho bạn!`
     );
     setSelectedDress(null);
-    setBookingDate('');
+    setQuantity(1);
+  };
+
+  const handleCartCheckout = (e) => {
+    e.preventDefault();
+    if (cartItems.length === 0) return;
+    if (!customerName.trim() || !customerPhone.trim() || !shippingAddress.trim()) {
+      return alert('Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ giao hàng!');
+    }
+    alert(
+      `Đặt mua thành công ${totalCartCount} sản phẩm (${totalCartAmount.toLocaleString('vi-VN')}VND) cho ${customerName} (${customerPhone}) tại "${shippingAddress}". Cửa hàng sẽ sớm giao hàng cho bạn!`
+    );
+    setCartItems([]);
+    setShowCartModal(false);
   };
 
   const navLinkStyle = {
@@ -359,12 +387,12 @@ function UserShop({ user, onLogout }) {
               display: 'flex',
               alignItems: 'center'
             }}
-            title="Giỏ đặt lịch"
+            title="Giỏ hàng"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#1A1A1A">
               <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zM7.16 14.26l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0 0 20 3.5H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 14.37 5.48 16 7 16h12v-2H7.42c-.14 0-.25-.11-.26-.24z" />
             </svg>
-            {cartItems.length > 0 && (
+            {totalCartCount > 0 && (
               <span
                 style={{
                   position: 'absolute',
@@ -383,7 +411,7 @@ function UserShop({ user, onLogout }) {
                   padding: '0 4px'
                 }}
               >
-                {cartItems.length}
+                {totalCartCount}
               </span>
             )}
           </button>
@@ -747,7 +775,10 @@ function UserShop({ user, onLogout }) {
                 <article
                   key={item.id}
                   className="arent-product-card"
-                  onClick={() => setSelectedDress(item)}
+                  onClick={() => {
+                    setQuantity(1);
+                    setSelectedDress(item);
+                  }}
                 >
                   <div>
                     <div
@@ -836,10 +867,10 @@ function UserShop({ user, onLogout }) {
           fontWeight: '600'
         }}
       >
-        <span>Arent Fashion Dress Rental • Liên hệ tư vấn & đặt lịch thử váy</span>
+        <span>Arent Fashion • Cửa hàng thời trang & phụ kiện cao cấp</span>
       </footer>
 
-      {/* MODAL CHI TIẾT & ĐẶT LỊCH THỬ VÁY */}
+      {/* MODAL CHI TIẾT & ĐẶT MUA SẢN PHẨM */}
       {selectedDress && (
         <div
           style={{
@@ -859,7 +890,7 @@ function UserShop({ user, onLogout }) {
               backgroundColor: '#FFFDFC',
               borderRadius: '18px',
               border: '2px solid #AF8383',
-              maxWidth: '450px',
+              maxWidth: '460px',
               width: '100%',
               padding: '24px 28px',
               boxShadow: '0 12px 32px rgba(0,0,0,0.2)'
@@ -867,32 +898,52 @@ function UserShop({ user, onLogout }) {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ margin: '0 0 6px 0', color: '#733A3E', fontSize: '21px', fontFamily: "'Playfair Display', Georgia, serif" }}>
-              Đặt lịch thử váy dạ hội
+              Đặt mua sản phẩm
             </h3>
-            <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#4B3635' }}>
-              Mẫu đã chọn: <strong>{selectedDress.name}</strong> ({selectedDress.slug})
+            <p style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#4B3635' }}>
+              Sản phẩm: <strong>{selectedDress.name}</strong> ({selectedDress.slug})
             </p>
-            <p style={{ margin: '0 0 14px 0', fontSize: '15px', fontWeight: '700', color: '#DB5898' }}>
-              {Number(selectedDress.price).toLocaleString('vi-VN')}VND
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <span style={{ fontSize: '16px', fontWeight: '800', color: '#DB5898' }}>
+                {Number(selectedDress.price).toLocaleString('vi-VN')}VND
+              </span>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: Number(selectedDress.stock_quantity) > 0 ? '#2F855A' : '#C53030' }}>
+                {Number(selectedDress.stock_quantity) > 0 ? `Còn ${selectedDress.stock_quantity} sản phẩm` : 'Hết hàng'}
+              </span>
+            </div>
             {selectedDress.description && (
               <p style={{ margin: '0 0 14px 0', fontSize: '13px', color: '#735754', lineHeight: 1.5 }}>
                 {selectedDress.description}
               </p>
             )}
 
-            <form onSubmit={handleBookingSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', fontWeight: '700', color: '#634846' }}>
-                  Họ và tên *
-                </label>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Nhập họ tên"
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #DFC9C5', borderRadius: '8px', fontSize: '14px' }}
-                />
+            <form onSubmit={handlePurchaseSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', fontWeight: '700', color: '#634846' }}>
+                    Họ và tên *
+                  </label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Nhập họ tên"
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #DFC9C5', borderRadius: '8px', fontSize: '14px' }}
+                  />
+                </div>
+                <div style={{ width: '96px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', fontWeight: '700', color: '#634846' }}>
+                    Số lượng
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max={Math.max(1, Number(selectedDress.stock_quantity) || 1)}
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
+                    style={{ width: '100%', padding: '10px 10px', border: '1px solid #DFC9C5', borderRadius: '8px', fontSize: '14px' }}
+                  />
+                </div>
               </div>
 
               <div>
@@ -910,17 +961,25 @@ function UserShop({ user, onLogout }) {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', fontWeight: '700', color: '#634846' }}>
-                  Ngày dự kiến ghé cửa hàng
+                  Địa chỉ giao hàng *
                 </label>
                 <input
-                  type="date"
-                  value={bookingDate}
-                  onChange={(e) => setBookingDate(e.target.value)}
+                  type="text"
+                  value={shippingAddress}
+                  onChange={(e) => setShippingAddress(e.target.value)}
+                  placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/TP..."
                   style={{ width: '100%', padding: '10px 12px', border: '1px solid #DFC9C5', borderRadius: '8px', fontSize: '14px' }}
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid #F1E3E0' }}>
+                <span style={{ fontSize: '13px', fontWeight: '700', color: '#634846' }}>Tổng thanh toán:</span>
+                <span style={{ fontSize: '17px', fontWeight: '800', color: '#DB5898' }}>
+                  {(Number(selectedDress.price) * quantity).toLocaleString('vi-VN')}VND
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   onClick={() => setSelectedDress(null)}
@@ -930,19 +989,28 @@ function UserShop({ user, onLogout }) {
                 </button>
                 <button
                   type="button"
+                  disabled={Number(selectedDress.stock_quantity) <= 0}
                   onClick={() => {
-                    handleAddToCart(selectedDress);
+                    handleAddToCart(selectedDress, quantity);
                     setSelectedDress(null);
                   }}
-                  style={{ padding: '9px 18px', backgroundColor: '#F6E8DA', color: '#733A3E', border: '1px solid #AF8383', borderRadius: '999px', cursor: 'pointer', fontWeight: '700' }}
+                  style={{
+                    padding: '9px 18px',
+                    backgroundColor: '#F6E8DA',
+                    color: '#733A3E',
+                    border: '1px solid #AF8383',
+                    borderRadius: '999px',
+                    cursor: Number(selectedDress.stock_quantity) <= 0 ? 'not-allowed' : 'pointer',
+                    fontWeight: '700'
+                  }}
                 >
-                  Lưu vào giỏ
+                  Thêm vào giỏ
                 </button>
                 <button
                   type="submit"
                   disabled={Number(selectedDress.stock_quantity) <= 0}
                   style={{
-                    padding: '9px 20px',
+                    padding: '9px 22px',
                     backgroundColor: Number(selectedDress.stock_quantity) <= 0 ? '#D6C6C4' : '#CD9593',
                     color: '#fff',
                     border: 'none',
@@ -951,7 +1019,7 @@ function UserShop({ user, onLogout }) {
                     fontWeight: '700'
                   }}
                 >
-                  {Number(selectedDress.stock_quantity) <= 0 ? 'Hết hàng' : 'Xác nhận đặt lịch'}
+                  {Number(selectedDress.stock_quantity) <= 0 ? 'Hết hàng' : 'Mua ngay'}
                 </button>
               </div>
             </form>
@@ -959,7 +1027,7 @@ function UserShop({ user, onLogout }) {
         </div>
       )}
 
-      {/* MODAL GIỎ ĐẶT LỊCH */}
+      {/* MODAL GIỎ HÀNG */}
       {showCartModal && (
         <div
           style={{
@@ -979,7 +1047,7 @@ function UserShop({ user, onLogout }) {
               backgroundColor: '#FFFDFC',
               borderRadius: '18px',
               border: '2px solid #AF8383',
-              maxWidth: '440px',
+              maxWidth: '470px',
               width: '100%',
               padding: '24px 28px',
               boxShadow: '0 12px 32px rgba(0,0,0,0.2)'
@@ -987,51 +1055,119 @@ function UserShop({ user, onLogout }) {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ margin: '0 0 14px 0', color: '#733A3E', fontSize: '20px', fontFamily: "'Playfair Display', Georgia, serif" }}>
-              Mẫu đã chọn ({cartItems.length})
+              Giỏ hàng của bạn ({totalCartCount})
             </h3>
             {cartItems.length === 0 ? (
-              <p style={{ color: '#735754', fontSize: '14px' }}>Chưa có mẫu nào trong giỏ của bạn.</p>
+              <p style={{ color: '#735754', fontSize: '14px' }}>Chưa có sản phẩm nào trong giỏ hàng.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '280px', overflowY: 'auto' }}>
-                {cartItems.map((item) => (
-                  <div
-                    key={item.id}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '10px 12px',
-                      backgroundColor: '#FFF2F2',
-                      borderRadius: '10px',
-                      gap: '10px'
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: '700', fontSize: '14px' }}>{item.name}</div>
-                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#DB5898' }}>
-                        {Number(item.price).toLocaleString('vi-VN')}VND
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setCartItems((prev) => prev.filter((c) => c.id !== item.id))}
-                      style={{ background: 'none', border: 'none', color: '#A94442', fontWeight: '700', cursor: 'pointer' }}
+              <form onSubmit={handleCartCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '220px', overflowY: 'auto' }}>
+                  {cartItems.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '10px 12px',
+                        backgroundColor: '#FFF2F2',
+                        borderRadius: '10px',
+                        gap: '10px'
+                      }}
                     >
-                      Xóa
-                    </button>
-                  </div>
-                ))}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: '700', fontSize: '14px' }}>{item.name}</div>
+                        <div style={{ fontSize: '13px', fontWeight: '700', color: '#DB5898' }}>
+                          {Number(item.price).toLocaleString('vi-VN')}VND
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateCartQty(item.id, -1)}
+                          style={{ width: '24px', height: '24px', borderRadius: '50%', border: '1px solid #AF8383', background: '#fff', cursor: 'pointer', fontWeight: '700' }}
+                        >
+                          -
+                        </button>
+                        <span style={{ minWidth: '18px', textAlign: 'center', fontWeight: '700', fontSize: '13px' }}>
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateCartQty(item.id, 1)}
+                          style={{ width: '24px', height: '24px', borderRadius: '50%', border: '1px solid #AF8383', background: '#fff', cursor: 'pointer', fontWeight: '700' }}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCartItems((prev) => prev.filter((c) => c.id !== item.id))}
+                        style={{ background: 'none', border: 'none', color: '#A94442', fontWeight: '700', cursor: 'pointer', fontSize: '12px' }}
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Họ và tên người nhận *"
+                  style={{ width: '100%', padding: '9px 12px', border: '1px solid #DFC9C5', borderRadius: '8px', fontSize: '13px' }}
+                />
+                <input
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="Số điện thoại *"
+                  style={{ width: '100%', padding: '9px 12px', border: '1px solid #DFC9C5', borderRadius: '8px', fontSize: '13px' }}
+                />
+                <input
+                  type="text"
+                  value={shippingAddress}
+                  onChange={(e) => setShippingAddress(e.target.value)}
+                  placeholder="Địa chỉ giao hàng *"
+                  style={{ width: '100%', padding: '9px 12px', border: '1px solid #DFC9C5', borderRadius: '8px', fontSize: '13px' }}
+                />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid #F1E3E0' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#634846' }}>Tổng cộng:</span>
+                  <span style={{ fontSize: '17px', fontWeight: '800', color: '#DB5898' }}>
+                    {totalCartAmount.toLocaleString('vi-VN')}VND
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '4px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowCartModal(false)}
+                    style={{ padding: '8px 18px', backgroundColor: '#D6C5BE', color: '#4B3635', border: 'none', borderRadius: '999px', cursor: 'pointer', fontWeight: '700' }}
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    type="submit"
+                    style={{ padding: '8px 22px', backgroundColor: '#CD9593', color: '#fff', border: 'none', borderRadius: '999px', cursor: 'pointer', fontWeight: '700' }}
+                  >
+                    Đặt mua tất cả
+                  </button>
+                </div>
+              </form>
+            )}
+            {cartItems.length === 0 && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowCartModal(false)}
+                  style={{ padding: '8px 20px', backgroundColor: '#AF8383', color: '#fff', border: 'none', borderRadius: '999px', cursor: 'pointer', fontWeight: '700' }}
+                >
+                  Đóng
+                </button>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
-              <button
-                type="button"
-                onClick={() => setShowCartModal(false)}
-                style={{ padding: '8px 20px', backgroundColor: '#AF8383', color: '#fff', border: 'none', borderRadius: '999px', cursor: 'pointer', fontWeight: '700' }}
-              >
-                Đóng
-              </button>
-            </div>
           </div>
         </div>
       )}

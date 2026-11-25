@@ -237,7 +237,7 @@ function AdminPage({ user, onLogout }) {
                 Chào mừng đến với Arent Fashion Admin
               </h3>
               <p style={{ color: '#735754', margin: '0 0 18px 0', lineHeight: '1.6', fontSize: '14px' }}>
-                Quản lý danh sách váy dạ hội, giá thuê/bán và số lượng tồn kho của cửa hàng.
+                Quản lý danh sách váy dạ hội, giá bán và số lượng tồn kho của cửa hàng.
               </p>
               <button
                 onClick={() => setActiveMenu('dresses')}
@@ -327,7 +327,7 @@ function AdminPage({ user, onLogout }) {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#634846' }}>Giá thuê/bán (VND) * (≥ 100k)</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#634846' }}>Giá bán (VND) * (≥ 100k)</label>
                   <input
                     type="number"
                     value={price}
