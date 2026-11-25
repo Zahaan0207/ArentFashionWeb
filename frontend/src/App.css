@@ -1,6 +1,103 @@
-/* Responsive cho màn hình nhỏ */
+/* --- ARENT FASHION FIGMA THEME STYLES --- */
+.arent-arched-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 800;
+  fill: #9E6E65;
+  letter-spacing: 1.5px;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.5));
+}
+
+.arent-auth-input::placeholder {
+  color: #8E7F7C;
+  font-weight: 500;
+}
+
+.arent-nav-search::placeholder {
+  color: #6B6262;
+  font-size: 13px;
+}
+
+.arent-nav-search:focus {
+  box-shadow: none !important;
+}
+
+.arent-product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 54px 68px;
+}
+
+.arent-product-card {
+  background-color: #FFFFFF;
+  border: 1px solid #4A4A4A;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.arent-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(139, 92, 92, 0.16);
+}
+
+.arent-hero-layout {
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+}
+
+.arent-category-item {
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.arent-category-item:hover {
+  transform: translateY(-4px) scale(1.03);
+}
+
+.arent-category-label {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.8px;
+  color: #6F3A3D;
+  margin-top: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Responsive cho màn hình vừa & nhỏ */
+@media (max-width: 1100px) {
+  .arent-hero-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .arent-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+}
+
 @media (max-width: 768px) {
   .grid-3-cols {
     grid-template-columns: 1fr !important;
+  }
+
+  .arent-product-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .arent-category-label {
+    font-size: 15px;
   }
 }

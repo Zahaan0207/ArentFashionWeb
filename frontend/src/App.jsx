@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import './App.css';
 import LoginPage from './pages/LoginPage';
 import Signup from './pages/Signup';
 import AdminPage from './pages/AdminPage';

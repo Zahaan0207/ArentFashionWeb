@@ -2,8 +2,8 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #FBF3F1;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #FFF2F2;
+  font-family: 'Quicksand', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #4B3635;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -29,7 +29,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #A9827E;
+  background: #AF8383;
 }
 
 /* --- HIỆU ỨNG VÀ TABLE HOVER --- */
@@ -44,8 +44,8 @@ table tbody tr:hover {
 /* --- INPUT & SELECT FOCUS EFFECTS --- */
 input:focus, select:focus {
   outline: none;
-  border-color: #A9827E !important;
-  box-shadow: 0 0 0 3px rgba(169, 130, 126, 0.18);
+  border-color: #AF8383 !important;
+  box-shadow: 0 0 0 3px rgba(175, 131, 131, 0.18);
 }
 
 /* --- BUTTON HOVER EFFECTS --- */
