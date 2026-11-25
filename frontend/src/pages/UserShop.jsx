@@ -16,11 +16,13 @@ import sampleDressImg from '../assets/figma/sample-dress.png';
 
 const DRESS_CATEGORIES = ['Tất cả', 'Đầm dạ hội dài', 'Đầm xẻ tà', 'Đầm công chúa', 'Áo choàng lông thú'];
 const ACCESSORY_CATEGORIES = ['Cài tóc', 'Dây chuyền', 'Bông tai', 'Giày'];
+const PHONE_REGEX = /^0\d{9}$/;
 
 function UserShop({ user, onLogout }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [submittingOrder, setSubmittingOrder] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
@@ -103,30 +105,92 @@ function UserShop({ user, onLogout }) {
     );
   };
 
-  const handlePurchaseSubmit = (e) => {
-    e.preventDefault();
+  const validateOrderForm = () => {
     if (!customerName.trim() || !customerPhone.trim() || !shippingAddress.trim()) {
-      return alert('Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ giao hàng!');
+      alert('Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ giao hàng!');
+      return false;
     }
-    const orderTotal = Number(selectedProduct.gia_goc) * quantity;
-    alert(
-      `Đặt mua thành công ${quantity}x "${selectedProduct.ten_sp}" (${orderTotal.toLocaleString('vi-VN')}VND) cho ${customerName} (${customerPhone}) tại "${shippingAddress}". Cửa hàng sẽ sớm giao hàng cho bạn!`
-    );
-    setSelectedProduct(null);
-    setQuantity(1);
+    if (!PHONE_REGEX.test(customerPhone.trim())) {
+      alert('Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng số 0!');
+      return false;
+    }
+    return true;
   };
 
-  const handleCartCheckout = (e) => {
+  const handlePurchaseSubmit = async (e) => {
     e.preventDefault();
-    if (cartItems.length === 0) return;
-    if (!customerName.trim() || !customerPhone.trim() || !shippingAddress.trim()) {
-      return alert('Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ giao hàng!');
+    if (!selectedProduct || submittingOrder) return;
+    if (!validateOrderForm()) return;
+
+    setSubmittingOrder(true);
+    try {
+      const res = await API.post('/api/donhang', {
+        userId: user?.id,
+        userEmail: user?.username,
+        nguoi_nhan: customerName.trim(),
+        sdt_nhan: customerPhone.trim(),
+        dia_chi_giao: shippingAddress.trim(),
+        phuong_thuc_tt: 'COD',
+        phi_van_chuyen: 0,
+        items: [
+          {
+            stt: selectedProduct.stt,
+            so_luong: quantity
+          }
+        ]
+      });
+
+      if (res.data.success) {
+        const orderTotal = res.data.data?.tong_thanh_toan ?? Number(selectedProduct.gia_goc) * quantity;
+        alert(
+          `Đặt mua thành công đơn #${res.data.data?.ma_dh} (${quantity}x "${selectedProduct.ten_sp}", ${Number(orderTotal).toLocaleString('vi-VN')}VND) cho ${customerName.trim()} (${customerPhone.trim()}) tại "${shippingAddress.trim()}". Cửa hàng sẽ sớm giao hàng cho bạn!`
+        );
+        setSelectedProduct(null);
+        setQuantity(1);
+        setShippingAddress('');
+      }
+    } catch (err) {
+      alert('Đặt hàng thất bại: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setSubmittingOrder(false);
     }
-    alert(
-      `Đặt mua thành công ${totalCartCount} sản phẩm (${totalCartAmount.toLocaleString('vi-VN')}VND) cho ${customerName} (${customerPhone}) tại "${shippingAddress}". Cửa hàng sẽ sớm giao hàng cho bạn!`
-    );
-    setCartItems([]);
-    setShowCartModal(false);
+  };
+
+  const handleCartCheckout = async (e) => {
+    e.preventDefault();
+    if (cartItems.length === 0 || submittingOrder) return;
+    if (!validateOrderForm()) return;
+
+    setSubmittingOrder(true);
+    try {
+      const res = await API.post('/api/donhang', {
+        userId: user?.id,
+        userEmail: user?.username,
+        nguoi_nhan: customerName.trim(),
+        sdt_nhan: customerPhone.trim(),
+        dia_chi_giao: shippingAddress.trim(),
+        phuong_thuc_tt: 'COD',
+        phi_van_chuyen: 0,
+        items: cartItems.map((item) => ({
+          stt: item.stt,
+          so_luong: item.quantity
+        }))
+      });
+
+      if (res.data.success) {
+        const orderTotal = res.data.data?.tong_thanh_toan ?? totalCartAmount;
+        alert(
+          `Đặt mua thành công đơn #${res.data.data?.ma_dh} (${totalCartCount} sản phẩm, ${Number(orderTotal).toLocaleString('vi-VN')}VND) cho ${customerName.trim()} (${customerPhone.trim()}) tại "${shippingAddress.trim()}". Cửa hàng sẽ sớm giao hàng cho bạn!`
+        );
+        setCartItems([]);
+        setShowCartModal(false);
+        setShippingAddress('');
+      }
+    } catch (err) {
+      alert('Đặt hàng thất bại: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setSubmittingOrder(false);
+    }
   };
 
   const navLinkStyle = {
@@ -945,8 +1009,10 @@ function UserShop({ user, onLogout }) {
                 <input
                   type="tel"
                   value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   placeholder="090..."
+                  maxLength={10}
+                  inputMode="numeric"
                   style={{ width: '100%', padding: '10px 12px', border: '1px solid #DFC9C5', borderRadius: '8px', fontSize: '14px' }}
                 />
               </div>
@@ -981,7 +1047,7 @@ function UserShop({ user, onLogout }) {
                 </button>
                 <button
                   type="button"
-                  disabled={Number(selectedProduct.trang_thai) === 0}
+                  disabled={Number(selectedProduct.trang_thai) === 0 || submittingOrder}
                   onClick={() => {
                     handleAddToCart(selectedProduct, quantity);
                     setSelectedProduct(null);
@@ -992,7 +1058,7 @@ function UserShop({ user, onLogout }) {
                     color: '#733A3E',
                     border: '1px solid #AF8383',
                     borderRadius: '999px',
-                    cursor: Number(selectedProduct.trang_thai) === 0 ? 'not-allowed' : 'pointer',
+                    cursor: Number(selectedProduct.trang_thai) === 0 || submittingOrder ? 'not-allowed' : 'pointer',
                     fontWeight: '700'
                   }}
                 >
@@ -1000,18 +1066,18 @@ function UserShop({ user, onLogout }) {
                 </button>
                 <button
                   type="submit"
-                  disabled={Number(selectedProduct.trang_thai) === 0}
+                  disabled={Number(selectedProduct.trang_thai) === 0 || submittingOrder}
                   style={{
                     padding: '9px 22px',
-                    backgroundColor: Number(selectedProduct.trang_thai) === 0 ? '#D6C6C4' : '#CD9593',
+                    backgroundColor: Number(selectedProduct.trang_thai) === 0 || submittingOrder ? '#D6C6C4' : '#CD9593',
                     color: '#fff',
                     border: 'none',
                     borderRadius: '999px',
-                    cursor: Number(selectedProduct.trang_thai) === 0 ? 'not-allowed' : 'pointer',
+                    cursor: Number(selectedProduct.trang_thai) === 0 || submittingOrder ? 'not-allowed' : 'pointer',
                     fontWeight: '700'
                   }}
                 >
-                  {Number(selectedProduct.trang_thai) === 0 ? 'Ngừng bán' : 'Mua ngay'}
+                  {Number(selectedProduct.trang_thai) === 0 ? 'Ngừng bán' : submittingOrder ? 'Đang đặt...' : 'Mua ngay'}
                 </button>
               </div>
             </form>
@@ -1113,8 +1179,10 @@ function UserShop({ user, onLogout }) {
                 <input
                   type="tel"
                   value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   placeholder="Số điện thoại *"
+                  maxLength={10}
+                  inputMode="numeric"
                   style={{ width: '100%', padding: '9px 12px', border: '1px solid #DFC9C5', borderRadius: '8px', fontSize: '13px' }}
                 />
                 <input
@@ -1142,9 +1210,18 @@ function UserShop({ user, onLogout }) {
                   </button>
                   <button
                     type="submit"
-                    style={{ padding: '8px 22px', backgroundColor: '#CD9593', color: '#fff', border: 'none', borderRadius: '999px', cursor: 'pointer', fontWeight: '700' }}
+                    disabled={submittingOrder}
+                    style={{
+                      padding: '8px 22px',
+                      backgroundColor: submittingOrder ? '#D6C6C4' : '#CD9593',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '999px',
+                      cursor: submittingOrder ? 'not-allowed' : 'pointer',
+                      fontWeight: '700'
+                    }}
                   >
-                    Đặt mua tất cả
+                    {submittingOrder ? 'Đang đặt...' : 'Đặt mua tất cả'}
                   </button>
                 </div>
               </form>
