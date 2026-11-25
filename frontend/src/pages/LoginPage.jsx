@@ -2,29 +2,38 @@ import { useState } from 'react';
 import logoDnhap1 from '../../Pictures/logodnhap1.png';
 import logoDnhap2 from '../../Pictures/logodnhap2.png';
 import okhoatim from '../../Pictures/okhoatim.png';
+import API from '../api/axios';
 
 function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    const cleanUser = username.trim().toLowerCase();
-    const cleanPass = password.trim();
+    const cleanUser = username.trim();
 
-    if (!cleanUser || !cleanPass) {
-      return setErrorMsg('Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!');
+    if (!cleanUser || !password) {
+      setErrorMsg('Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!');
+      return;
     }
 
-    if (cleanUser === 'admin') {
-      onLoginSuccess({ username: 'admin', role: 'admin' });
-    } else if (cleanUser === 'user') {
-      onLoginSuccess({ username: 'user', role: 'user' });
-    } else {
-      onLoginSuccess({ username: cleanUser, role: 'user' });
+    setIsSubmitting(true);
+    try {
+      const { data } = await API.post('/api/auth/login', {
+        email: cleanUser,
+        password
+      });
+      onLoginSuccess(data.user);
+    } catch (error) {
+      setErrorMsg(
+        error.response?.data?.message || 'Không thể kết nối máy chủ. Vui lòng thử lại.'
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -117,6 +126,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
               </label>
               <input
                 type="text"
+                autoComplete="username"
                 className="arent-auth-input"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -149,6 +159,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
               </label>
               <input
                 type="password"
+                autoComplete="current-password"
                 className="arent-auth-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -189,8 +200,9 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
                   cursor: 'pointer',
                   boxShadow: '0 3px 10px rgba(175, 131, 131, 0.25)'
                 }}
+                disabled={isSubmitting}
               >
-                Đăng nhập
+                {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
               </button>
             </div>
           </form>

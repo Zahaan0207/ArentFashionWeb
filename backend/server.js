@@ -1,18 +1,14 @@
 const express = require('express');
 const cors = require('cors');
-const dressRoutes = require('./routes/dressRoutes'); // hoặc đường dẫn tới file routes của bạn
+const sanPhamRoutes = require('./routes/sanPhamRoutes');
+const authRoutes = require('./routes/authRoutes');
 
-const app = express(); // <-- Phải khởi tạo app ở đây trước!
+const app = express();
 
-// Sau đó mới dùng app.use
 app.use(cors());
-app.use(express.json());
-app.use('/api/dresses', dressRoutes); 
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Backend Server running on port ${PORT}`);
-}); 
 app.get('/', (req, res) => {
   res.send(`
     <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #FAF6F0; margin: 0; font-family: 'Georgia', serif;">
@@ -26,4 +22,20 @@ app.get('/', (req, res) => {
       </div>
     </div>
   `);
+});
+
+app.use('/api/sanpham', sanPhamRoutes);
+app.use('/api/auth', authRoutes);
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason);
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Backend Server running on port ${PORT}`);
 });

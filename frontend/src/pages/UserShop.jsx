@@ -14,22 +14,22 @@ import catShoesImg from '../assets/figma/cat-shoes.png';
 import catDoveImg from '../assets/figma/cat-dove.png';
 import sampleDressImg from '../assets/figma/sample-dress.png';
 
-const DRESS_CATEGORIES = ['Tất cả', 'Đuôi cá', 'Đầm Công Chúa', 'Váy Dạ Hội', 'Xẻ tà'];
+const DRESS_CATEGORIES = ['Tất cả', 'Đầm dạ hội dài', 'Đầm xẻ tà', 'Đầm công chúa', 'Áo choàng lông thú'];
 const ACCESSORY_CATEGORIES = ['Cài tóc', 'Dây chuyền', 'Bông tai', 'Giày'];
 
 function UserShop({ user, onLogout }) {
-  const [dresses, setDresses] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
 
-  const [openDropdown, setOpenDropdown] = useState(null); // 'home' | 'dress' | 'accessory' | 'account' | null
+  const [openDropdown, setOpenDropdown] = useState(null);
   const [showCartModal, setShowCartModal] = useState(false);
   const [cartItems, setCartItems] = useState([]);
 
-  const [selectedDress, setSelectedDress] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [customerName, setCustomerName] = useState(user?.fullName || user?.username || '');
   const [customerPhone, setCustomerPhone] = useState(user?.phone || '');
@@ -38,14 +38,14 @@ function UserShop({ user, onLogout }) {
   const featuredRef = useRef(null);
   const footerRef = useRef(null);
 
-  const fetchDresses = async () => {
+  const fetchProducts = async () => {
     setLoading(true);
     setLoadError('');
     try {
-      const res = await API.get('/api/dresses');
+      const res = await API.get('/api/sanpham');
       if (res.data.success) {
-        const sortedData = res.data.data.sort((a, b) => a.id - b.id);
-        setDresses(sortedData);
+        const sortedData = [...res.data.data].sort((a, b) => Number(a.stt) - Number(b.stt));
+        setProducts(sortedData);
       }
     } catch (err) {
       setLoadError('Lỗi tải danh sách sản phẩm: ' + (err.response?.data?.message || err.message));
@@ -55,20 +55,25 @@ function UserShop({ user, onLogout }) {
   };
 
   useEffect(() => {
-    fetchDresses();
+    fetchProducts();
   }, []);
 
-  const filteredDresses = dresses.filter((item) => {
+  const filteredProducts = products.filter((item) => {
     const keyword = searchTerm.trim().toLowerCase();
-    const matchName =
+    const matchKeyword =
       !keyword ||
-      item.name?.toLowerCase().includes(keyword) ||
-      item.slug?.toLowerCase().includes(keyword) ||
-      item.category?.toLowerCase().includes(keyword);
+      item.ten_sp?.toLowerCase().includes(keyword) ||
+      item.ma_sp?.toLowerCase().includes(keyword) ||
+      item.ten_danh_muc?.toLowerCase().includes(keyword) ||
+      item.mo_ta_chi_tiet?.toLowerCase().includes(keyword);
+
     const matchCategory =
       selectedCategory === 'Tất cả' ||
-      item.category?.toLowerCase() === selectedCategory.toLowerCase();
-    return matchName && matchCategory;
+      String(item.ten_danh_muc || '').toLowerCase() === selectedCategory.toLowerCase() ||
+      item.ten_sp?.toLowerCase().includes(selectedCategory.toLowerCase()) ||
+      item.mo_ta_chi_tiet?.toLowerCase().includes(selectedCategory.toLowerCase());
+
+    return matchKeyword && matchCategory;
   });
 
   const handleSelectCategory = (cat) => {
@@ -78,22 +83,22 @@ function UserShop({ user, onLogout }) {
   };
 
   const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const totalCartAmount = cartItems.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+  const totalCartAmount = cartItems.reduce((sum, item) => sum + Number(item.gia_goc) * item.quantity, 0);
 
   const handleAddToCart = (item, qty = 1) => {
     setCartItems((prev) => {
-      const existing = prev.find((c) => c.id === item.id);
+      const existing = prev.find((c) => c.stt === item.stt);
       if (existing) {
-        return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + qty } : c));
+        return prev.map((c) => (c.stt === item.stt ? { ...c, quantity: c.quantity + qty } : c));
       }
       return [...prev, { ...item, quantity: qty }];
     });
   };
 
-  const handleUpdateCartQty = (id, delta) => {
+  const handleUpdateCartQty = (stt, delta) => {
     setCartItems((prev) =>
       prev
-        .map((c) => (c.id === id ? { ...c, quantity: c.quantity + delta } : c))
+        .map((c) => (c.stt === stt ? { ...c, quantity: c.quantity + delta } : c))
         .filter((c) => c.quantity > 0)
     );
   };
@@ -103,11 +108,11 @@ function UserShop({ user, onLogout }) {
     if (!customerName.trim() || !customerPhone.trim() || !shippingAddress.trim()) {
       return alert('Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ giao hàng!');
     }
-    const orderTotal = Number(selectedDress.price) * quantity;
+    const orderTotal = Number(selectedProduct.gia_goc) * quantity;
     alert(
-      `Đặt mua thành công ${quantity}x "${selectedDress.name}" (${orderTotal.toLocaleString('vi-VN')}VND) cho ${customerName} (${customerPhone}) tại "${shippingAddress}". Cửa hàng sẽ sớm giao hàng cho bạn!`
+      `Đặt mua thành công ${quantity}x "${selectedProduct.ten_sp}" (${orderTotal.toLocaleString('vi-VN')}VND) cho ${customerName} (${customerPhone}) tại "${shippingAddress}". Cửa hàng sẽ sớm giao hàng cho bạn!`
     );
-    setSelectedDress(null);
+    setSelectedProduct(null);
     setQuantity(1);
   };
 
@@ -142,7 +147,7 @@ function UserShop({ user, onLogout }) {
     position: 'absolute',
     top: 'calc(100% + 8px)',
     left: 0,
-    minWidth: '185px',
+    minWidth: '195px',
     backgroundColor: '#FFFDFC',
     border: '1px solid #DFC9C5',
     borderRadius: '10px',
@@ -183,7 +188,6 @@ function UserShop({ user, onLogout }) {
           zIndex: 50
         }}
       >
-        {/* Cụm trái: Logo vương miện + Menu */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '34px', flexWrap: 'wrap' }}>
           <button
             type="button"
@@ -203,7 +207,6 @@ function UserShop({ user, onLogout }) {
           </button>
 
           <nav style={{ display: 'flex', alignItems: 'center', gap: '26px', flexWrap: 'wrap' }}>
-            {/* Trang chủ */}
             <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
@@ -256,7 +259,6 @@ function UserShop({ user, onLogout }) {
               )}
             </div>
 
-            {/* Trang phục */}
             <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
@@ -292,7 +294,6 @@ function UserShop({ user, onLogout }) {
               )}
             </div>
 
-            {/* Phụ kiện */}
             <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
@@ -328,7 +329,6 @@ function UserShop({ user, onLogout }) {
               )}
             </div>
 
-            {/* Liên hệ */}
             <button
               type="button"
               style={navLinkStyle}
@@ -339,7 +339,6 @@ function UserShop({ user, onLogout }) {
           </nav>
         </div>
 
-        {/* Cụm phải: Thanh tìm kiếm + Giỏ hàng + Tài khoản */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div
             style={{
@@ -374,7 +373,6 @@ function UserShop({ user, onLogout }) {
             />
           </div>
 
-          {/* Giỏ hàng */}
           <button
             type="button"
             onClick={() => setShowCartModal(true)}
@@ -416,7 +414,6 @@ function UserShop({ user, onLogout }) {
             )}
           </button>
 
-          {/* Tài khoản */}
           <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
@@ -477,7 +474,6 @@ function UserShop({ user, onLogout }) {
         }}
       >
         <div className="arent-hero-layout">
-          {/* Cột trái: Thẻ logo Arent Dress Rental */}
           <div
             onClick={() => handleSelectCategory('Tất cả')}
             style={{
@@ -498,7 +494,6 @@ function UserShop({ user, onLogout }) {
             />
           </div>
 
-          {/* Cột phải: Khung hoa hồng & 7 danh mục */}
           <div
             style={{
               flex: 1,
@@ -511,7 +506,6 @@ function UserShop({ user, onLogout }) {
               overflow: 'hidden'
             }}
           >
-            {/* Dây hoa góc trên trái */}
             <img
               src={floralTlImg}
               alt=""
@@ -526,7 +520,6 @@ function UserShop({ user, onLogout }) {
               }}
             />
 
-            {/* Dây hoa góc dưới phải */}
             <img
               src={floralBrImg}
               alt=""
@@ -541,7 +534,6 @@ function UserShop({ user, onLogout }) {
               }}
             />
 
-            {/* Hàng 1: CÀI TÓC (Vương miện) & TRANG PHỤC (Váy) */}
             <div
               style={{
                 position: 'relative',
@@ -565,7 +557,6 @@ function UserShop({ user, onLogout }) {
               </button>
             </div>
 
-            {/* Hàng 2: DÂY CHUYỀN, CÀI TÓC (Nơ), BÔNG TAI */}
             <div
               style={{
                 position: 'relative',
@@ -594,7 +585,6 @@ function UserShop({ user, onLogout }) {
               </button>
             </div>
 
-            {/* Hàng 3: GIÀY & CÀI TÓC (Bồ câu) */}
             <div
               style={{
                 position: 'relative',
@@ -643,7 +633,6 @@ function UserShop({ user, onLogout }) {
             }}
           />
 
-          {/* Tiêu đề lớp đôi MỤC NỔI BẬT */}
           <div style={{ position: 'relative', display: 'inline-block', userSelect: 'none' }}>
             <div
               aria-hidden="true"
@@ -677,7 +666,6 @@ function UserShop({ user, onLogout }) {
             </h2>
           </div>
 
-          {/* Thanh hiển thị bộ lọc hiện tại nếu người dùng đang lọc */}
           {(selectedCategory !== 'Tất cả' || searchTerm.trim() !== '') && (
             <div style={{ marginTop: '18px', display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
               {selectedCategory !== 'Tất cả' && (
@@ -728,7 +716,7 @@ function UserShop({ user, onLogout }) {
             <p style={{ margin: '0 0 12px 0' }}>{loadError}</p>
             <button
               type="button"
-              onClick={fetchDresses}
+              onClick={fetchProducts}
               style={{
                 backgroundColor: '#AF8383',
                 color: '#FFFFFF',
@@ -742,7 +730,7 @@ function UserShop({ user, onLogout }) {
               Thử lại
             </button>
           </div>
-        ) : filteredDresses.length === 0 ? (
+        ) : filteredProducts.length === 0 ? (
           <div style={{ backgroundColor: '#FFFDFC', padding: '44px 24px', border: '1px solid #DFC9C5', textAlign: 'center', color: '#735754' }}>
             <p style={{ margin: '0 0 14px 0', fontSize: '16px' }}>
               Chưa có sản phẩm phù hợp với "{selectedCategory !== 'Tất cả' ? selectedCategory : searchTerm}".
@@ -768,16 +756,16 @@ function UserShop({ user, onLogout }) {
           </div>
         ) : (
           <section className="arent-product-grid">
-            {filteredDresses.map((item) => {
-              const isOut = Number(item.stock_quantity) <= 0;
+            {filteredProducts.map((item) => {
+              const isInactive = Number(item.trang_thai) === 0;
 
               return (
                 <article
-                  key={item.id}
+                  key={item.stt}
                   className="arent-product-card"
                   onClick={() => {
                     setQuantity(1);
-                    setSelectedDress(item);
+                    setSelectedProduct(item);
                   }}
                 >
                   <div>
@@ -792,8 +780,8 @@ function UserShop({ user, onLogout }) {
                       }}
                     >
                       <img
-                        src={item.image_url || item.image || sampleDressImg}
-                        alt={item.name}
+                        src={item.hinh_anh || sampleDressImg}
+                        alt={item.ten_sp}
                         style={{
                           width: '100%',
                           height: '100%',
@@ -801,7 +789,7 @@ function UserShop({ user, onLogout }) {
                           display: 'block'
                         }}
                       />
-                      {isOut && (
+                      {isInactive && (
                         <span
                           style={{
                             position: 'absolute',
@@ -814,7 +802,7 @@ function UserShop({ user, onLogout }) {
                             fontWeight: '700'
                           }}
                         >
-                          Hết hàng
+                          Ngừng bán
                         </span>
                       )}
                     </div>
@@ -830,7 +818,7 @@ function UserShop({ user, onLogout }) {
                         lineHeight: 1.4
                       }}
                     >
-                      {item.name}
+                      {item.ten_sp}
                     </h3>
                   </div>
 
@@ -843,7 +831,7 @@ function UserShop({ user, onLogout }) {
                       color: '#DB5898'
                     }}
                   >
-                    {Number(item.price).toLocaleString('vi-VN')}VND
+                    {Number(item.gia_goc).toLocaleString('vi-VN')}VND
                   </div>
                 </article>
               );
@@ -871,7 +859,7 @@ function UserShop({ user, onLogout }) {
       </footer>
 
       {/* MODAL CHI TIẾT & ĐẶT MUA SẢN PHẨM */}
-      {selectedDress && (
+      {selectedProduct && (
         <div
           style={{
             position: 'fixed',
@@ -883,7 +871,7 @@ function UserShop({ user, onLogout }) {
             padding: '16px',
             zIndex: 80
           }}
-          onClick={() => setSelectedDress(null)}
+          onClick={() => setSelectedProduct(null)}
         >
           <div
             style={{
@@ -901,19 +889,24 @@ function UserShop({ user, onLogout }) {
               Đặt mua sản phẩm
             </h3>
             <p style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#4B3635' }}>
-              Sản phẩm: <strong>{selectedDress.name}</strong> ({selectedDress.slug})
+              Sản phẩm: <strong>{selectedProduct.ten_sp}</strong> (Mã SP: {selectedProduct.ma_sp})
+            </p>
+            <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#735754' }}>
+              {selectedProduct.ten_danh_muc ? `Danh mục: ${selectedProduct.ten_danh_muc}` : ''}
+              {selectedProduct.ten_danh_muc && selectedProduct.so_luong !== undefined ? ' • ' : ''}
+              {selectedProduct.so_luong !== undefined ? `Còn: ${selectedProduct.so_luong}` : ''}
             </p>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <span style={{ fontSize: '16px', fontWeight: '800', color: '#DB5898' }}>
-                {Number(selectedDress.price).toLocaleString('vi-VN')}VND
+                {Number(selectedProduct.gia_goc).toLocaleString('vi-VN')}VND
               </span>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: Number(selectedDress.stock_quantity) > 0 ? '#2F855A' : '#C53030' }}>
-                {Number(selectedDress.stock_quantity) > 0 ? `Còn ${selectedDress.stock_quantity} sản phẩm` : 'Hết hàng'}
+              <span style={{ fontSize: '12px', fontWeight: '700', color: Number(selectedProduct.trang_thai) !== 0 ? '#2F855A' : '#C53030' }}>
+                {Number(selectedProduct.trang_thai) !== 0 ? 'Đang bán' : 'Ngừng bán'}
               </span>
             </div>
-            {selectedDress.description && (
+            {selectedProduct.mo_ta_chi_tiet && (
               <p style={{ margin: '0 0 14px 0', fontSize: '13px', color: '#735754', lineHeight: 1.5 }}>
-                {selectedDress.description}
+                {selectedProduct.mo_ta_chi_tiet}
               </p>
             )}
 
@@ -938,7 +931,6 @@ function UserShop({ user, onLogout }) {
                   <input
                     type="number"
                     min="1"
-                    max={Math.max(1, Number(selectedDress.stock_quantity) || 1)}
                     value={quantity}
                     onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
                     style={{ width: '100%', padding: '10px 10px', border: '1px solid #DFC9C5', borderRadius: '8px', fontSize: '14px' }}
@@ -975,24 +967,24 @@ function UserShop({ user, onLogout }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid #F1E3E0' }}>
                 <span style={{ fontSize: '13px', fontWeight: '700', color: '#634846' }}>Tổng thanh toán:</span>
                 <span style={{ fontSize: '17px', fontWeight: '800', color: '#DB5898' }}>
-                  {(Number(selectedDress.price) * quantity).toLocaleString('vi-VN')}VND
+                  {(Number(selectedProduct.gia_goc) * quantity).toLocaleString('vi-VN')}VND
                 </span>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px', flexWrap: 'wrap' }}>
                 <button
                   type="button"
-                  onClick={() => setSelectedDress(null)}
+                  onClick={() => setSelectedProduct(null)}
                   style={{ padding: '9px 18px', backgroundColor: '#D6C5BE', color: '#4B3635', border: 'none', borderRadius: '999px', cursor: 'pointer', fontWeight: '700' }}
                 >
                   Đóng
                 </button>
                 <button
                   type="button"
-                  disabled={Number(selectedDress.stock_quantity) <= 0}
+                  disabled={Number(selectedProduct.trang_thai) === 0}
                   onClick={() => {
-                    handleAddToCart(selectedDress, quantity);
-                    setSelectedDress(null);
+                    handleAddToCart(selectedProduct, quantity);
+                    setSelectedProduct(null);
                   }}
                   style={{
                     padding: '9px 18px',
@@ -1000,7 +992,7 @@ function UserShop({ user, onLogout }) {
                     color: '#733A3E',
                     border: '1px solid #AF8383',
                     borderRadius: '999px',
-                    cursor: Number(selectedDress.stock_quantity) <= 0 ? 'not-allowed' : 'pointer',
+                    cursor: Number(selectedProduct.trang_thai) === 0 ? 'not-allowed' : 'pointer',
                     fontWeight: '700'
                   }}
                 >
@@ -1008,18 +1000,18 @@ function UserShop({ user, onLogout }) {
                 </button>
                 <button
                   type="submit"
-                  disabled={Number(selectedDress.stock_quantity) <= 0}
+                  disabled={Number(selectedProduct.trang_thai) === 0}
                   style={{
                     padding: '9px 22px',
-                    backgroundColor: Number(selectedDress.stock_quantity) <= 0 ? '#D6C6C4' : '#CD9593',
+                    backgroundColor: Number(selectedProduct.trang_thai) === 0 ? '#D6C6C4' : '#CD9593',
                     color: '#fff',
                     border: 'none',
                     borderRadius: '999px',
-                    cursor: Number(selectedDress.stock_quantity) <= 0 ? 'not-allowed' : 'pointer',
+                    cursor: Number(selectedProduct.trang_thai) === 0 ? 'not-allowed' : 'pointer',
                     fontWeight: '700'
                   }}
                 >
-                  {Number(selectedDress.stock_quantity) <= 0 ? 'Hết hàng' : 'Mua ngay'}
+                  {Number(selectedProduct.trang_thai) === 0 ? 'Ngừng bán' : 'Mua ngay'}
                 </button>
               </div>
             </form>
@@ -1064,7 +1056,7 @@ function UserShop({ user, onLogout }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '220px', overflowY: 'auto' }}>
                   {cartItems.map((item) => (
                     <div
-                      key={item.id}
+                      key={item.stt}
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -1076,15 +1068,15 @@ function UserShop({ user, onLogout }) {
                       }}
                     >
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: '700', fontSize: '14px' }}>{item.name}</div>
+                        <div style={{ fontWeight: '700', fontSize: '14px' }}>{item.ten_sp}</div>
                         <div style={{ fontSize: '13px', fontWeight: '700', color: '#DB5898' }}>
-                          {Number(item.price).toLocaleString('vi-VN')}VND
+                          {Number(item.gia_goc).toLocaleString('vi-VN')}VND
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <button
                           type="button"
-                          onClick={() => handleUpdateCartQty(item.id, -1)}
+                          onClick={() => handleUpdateCartQty(item.stt, -1)}
                           style={{ width: '24px', height: '24px', borderRadius: '50%', border: '1px solid #AF8383', background: '#fff', cursor: 'pointer', fontWeight: '700' }}
                         >
                           -
@@ -1094,7 +1086,7 @@ function UserShop({ user, onLogout }) {
                         </span>
                         <button
                           type="button"
-                          onClick={() => handleUpdateCartQty(item.id, 1)}
+                          onClick={() => handleUpdateCartQty(item.stt, 1)}
                           style={{ width: '24px', height: '24px', borderRadius: '50%', border: '1px solid #AF8383', background: '#fff', cursor: 'pointer', fontWeight: '700' }}
                         >
                           +
@@ -1102,7 +1094,7 @@ function UserShop({ user, onLogout }) {
                       </div>
                       <button
                         type="button"
-                        onClick={() => setCartItems((prev) => prev.filter((c) => c.id !== item.id))}
+                        onClick={() => setCartItems((prev) => prev.filter((c) => c.stt !== item.stt))}
                         style={{ background: 'none', border: 'none', color: '#A94442', fontWeight: '700', cursor: 'pointer', fontSize: '12px' }}
                       >
                         Xóa

@@ -2,6 +2,9 @@ import { useState } from 'react';
 import logoDnhap2 from '../../Pictures/logodnhap2.png';
 import butterflyLeft from '../assets/figma/butterfly-left.png';
 import butterflyRight from '../assets/figma/butterfly-right.png';
+import API from '../api/axios';
+
+const PHONE_REGEX = /^0\d{9}$/;
 
 function Signup({ onSignupSuccess, onSwitchToLogin }) {
   const [username, setUsername] = useState('');
@@ -10,8 +13,14 @@ function Signup({ onSignupSuccess, onSwitchToLogin }) {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handlePhoneChange = (e) => {
+    const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setPhone(onlyDigits);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -25,13 +34,27 @@ function Signup({ onSignupSuccess, onSwitchToLogin }) {
     if (password !== confirmPassword) {
       return setErrorMsg('Mật khẩu nhập lại chưa khớp!');
     }
+    if (!PHONE_REGEX.test(cleanPhone)) {
+      return setErrorMsg('Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng số 0!');
+    }
 
-    onSignupSuccess({
-      username: cleanUser,
-      fullName: cleanName,
-      phone: cleanPhone,
-      role: 'user'
-    });
+    setIsSubmitting(true);
+    try {
+      const { data } = await API.post('/api/auth/signup', {
+        username: cleanUser,
+        password,
+        fullName: cleanName,
+        phone: cleanPhone
+      });
+
+      onSignupSuccess(data.user);
+    } catch (error) {
+      setErrorMsg(
+        error.response?.data?.message || 'Không thể đăng ký tài khoản. Vui lòng thử lại.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const inputStyle = {
@@ -141,7 +164,7 @@ function Signup({ onSignupSuccess, onSwitchToLogin }) {
               className="arent-auth-input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Tên đăng nhập"
+              placeholder="Tên đăng nhập / Email"
               style={inputStyle}
             />
 
@@ -176,8 +199,10 @@ function Signup({ onSignupSuccess, onSwitchToLogin }) {
               type="tel"
               className="arent-auth-input"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Số điện thoại"
+              onChange={handlePhoneChange}
+              placeholder="Số điện thoại (10 số, bắt đầu bằng 0)"
+              maxLength={10}
+              inputMode="numeric"
               style={inputStyle}
             />
 
@@ -190,6 +215,7 @@ function Signup({ onSignupSuccess, onSwitchToLogin }) {
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4px', position: 'relative', zIndex: 2 }}>
               <button
                 type="submit"
+                disabled={isSubmitting}
                 style={{
                   minWidth: '210px',
                   height: '48px',
@@ -204,7 +230,7 @@ function Signup({ onSignupSuccess, onSwitchToLogin }) {
                   boxShadow: '0 3px 10px rgba(175, 131, 131, 0.25)'
                 }}
               >
-                Đăng ký
+                {isSubmitting ? 'Đang đăng ký...' : 'Đăng ký'}
               </button>
             </div>
           </form>
