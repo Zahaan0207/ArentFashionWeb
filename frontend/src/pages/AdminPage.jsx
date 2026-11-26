@@ -16,6 +16,19 @@ const DEFAULT_CATEGORIES = [
 
 const MAX_IMAGE_SIZE_BYTES = 1.5 * 1024 * 1024;
 
+const formatTitleCase = (str) =>
+  String(str || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map(
+      (word) =>
+        word.charAt(0).toLocaleUpperCase('vi-VN') +
+        word.slice(1).toLocaleLowerCase('vi-VN')
+    )
+    .join(' ');
+
 function AdminPage({ user, onLogout }) {
   const [activeMenu, setActiveMenu] = useState('sanpham');
   const [products, setProducts] = useState([]);
@@ -24,8 +37,9 @@ function AdminPage({ user, onLogout }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
 
-  // Form State theo bảng SANPHAM mới (khóa chính: stt, mã SP: ma_sp)
+  // Form State theo bảng SANPHAM mới (khóa chính DB: stt, mã SP: ma_sp)
   const [editingStt, setEditingStt] = useState(null);
+  const [editingDisplayStt, setEditingDisplayStt] = useState(null);
   const [maSp, setMaSp] = useState('');
   const [tenSp, setTenSp] = useState('');
   const [tenDanhMuc, setTenDanhMuc] = useState(DEFAULT_CATEGORIES[0]);
@@ -34,6 +48,7 @@ function AdminPage({ user, onLogout }) {
   const [hinhAnh, setHinhAnh] = useState('');
   const [moTaChiTiet, setMoTaChiTiet] = useState('');
   const [trangThai, setTrangThai] = useState(1);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const fileInputRef = useRef(null);
 
@@ -42,6 +57,7 @@ function AdminPage({ user, onLogout }) {
     try {
       const res = await API.get('/api/sanpham');
       if (res.data.success) {
+        // Sắp xếp tăng dần theo stt trong DB: sản phẩm thêm đầu tiên luôn đứng số 1
         const sortedData = [...res.data.data].sort((a, b) => Number(a.stt) - Number(b.stt));
         setProducts(sortedData);
       }
@@ -63,14 +79,20 @@ function AdminPage({ user, onLogout }) {
     ])
   );
 
-  const filteredProducts = products.filter((item) => {
+  // Gắn số thứ tự hiển thị 1, 2, 3... theo đúng thứ tự sản phẩm được thêm vào
+  const productsWithOrder = products.map((item, idx) => ({
+    ...item,
+    displayStt: idx + 1
+  }));
+
+  const filteredProducts = productsWithOrder.filter((item) => {
     const keyword = searchTerm.trim().toLowerCase();
     const matchKeyword =
       !keyword ||
       item.ten_sp?.toLowerCase().includes(keyword) ||
       item.ma_sp?.toLowerCase().includes(keyword) ||
       item.ten_danh_muc?.toLowerCase().includes(keyword) ||
-      String(item.stt || '').includes(keyword);
+      String(item.displayStt).includes(keyword);
 
     const matchCategory =
       selectedCategory === 'Tất cả' || item.ten_danh_muc === selectedCategory;
@@ -84,6 +106,7 @@ function AdminPage({ user, onLogout }) {
 
   const resetForm = () => {
     setEditingStt(null);
+    setEditingDisplayStt(null);
     setMaSp('');
     setTenSp('');
     setTenDanhMuc(DEFAULT_CATEGORIES[0]);
@@ -127,7 +150,9 @@ function AdminPage({ user, onLogout }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!tenSp.trim() || !giaGoc) {
+    const formattedTenSp = formatTitleCase(tenSp);
+
+    if (!formattedTenSp || !giaGoc) {
       return alert('Vui lòng điền đủ Tên sản phẩm và Giá gốc!');
     }
 
@@ -144,8 +169,7 @@ function AdminPage({ user, onLogout }) {
     }
 
     const payload = {
-      ...(editingStt ? { ma_sp: maSp.trim().toUpperCase().slice(0, 5) } : {}),
-      ten_sp: tenSp.trim(),
+      ten_sp: formattedTenSp,
       ten_danh_muc: tenDanhMuc.trim(),
       so_luong: Number(soLuong),
       gia_goc: Number(giaGoc),
@@ -156,10 +180,7 @@ function AdminPage({ user, onLogout }) {
 
     try {
       if (editingStt) {
-        await API.put(`/api/sanpham/${editingStt}`, {
-          ...payload,
-          ma_sp: maSp.trim() || `SP-${editingStt}`
-        });
+        await API.put(`/api/sanpham/${editingStt}`, payload);
         alert('Cập nhật sản phẩm thành công!');
       } else {
         await API.post('/api/sanpham', payload);
@@ -174,6 +195,7 @@ function AdminPage({ user, onLogout }) {
 
   const handleEdit = (item) => {
     setEditingStt(item.stt);
+    setEditingDisplayStt(item.displayStt);
     setMaSp(item.ma_sp || '');
     setTenSp(item.ten_sp || '');
     setTenDanhMuc(item.ten_danh_muc || DEFAULT_CATEGORIES[0]);
@@ -198,6 +220,41 @@ function AdminPage({ user, onLogout }) {
     } catch (err) {
       alert('Lỗi xóa: ' + (err.response?.data?.message || err.message));
     }
+  };
+
+  const renderProductStatusBadge = (item) => {
+    const qty = Number(item.so_luong ?? 0);
+    const isStopped = Number(item.trang_thai) === 0;
+
+    if (isStopped) {
+      return (
+        <span style={{ color: '#4A5568', backgroundColor: '#EDF2F7', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', display: 'inline-block', whiteSpace: 'nowrap' }}>
+          Ngừng bán ({qty})
+        </span>
+      );
+    }
+
+    if (qty <= 0) {
+      return (
+        <span style={{ color: '#C53030', backgroundColor: '#FFF5F5', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', display: 'inline-block', whiteSpace: 'nowrap' }}>
+          Hết hàng ({qty})
+        </span>
+      );
+    }
+
+    if (qty <= 5) {
+      return (
+        <span style={{ color: '#B7791F', backgroundColor: '#FEFCBF', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', display: 'inline-block', whiteSpace: 'nowrap' }}>
+          Sắp hết ({qty})
+        </span>
+      );
+    }
+
+    return (
+      <span style={{ color: '#2F855A', backgroundColor: '#E6FFFA', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', display: 'inline-block', whiteSpace: 'nowrap' }}>
+        Còn hàng ({qty})
+      </span>
+    );
   };
 
   return (
@@ -339,7 +396,7 @@ function AdminPage({ user, onLogout }) {
               }}
             >
               <h3 style={{ marginBottom: '20px', color: '#8A6562', fontSize: '18px', fontWeight: '700' }}>
-                {editingStt ? `Cập nhật sản phẩm STT #${editingStt}` : 'Thêm sản phẩm mới'}
+                {editingStt ? `Cập nhật sản phẩm STT #${editingDisplayStt}` : 'Thêm sản phẩm mới'}
               </h3>
 
               <div
@@ -368,15 +425,14 @@ function AdminPage({ user, onLogout }) {
                   <input
                     type="text"
                     value={editingStt ? maSp : ''}
-                    readOnly={!editingStt}
-                    onChange={(e) => setMaSp(e.target.value.toUpperCase().slice(0, 5))}
-                    placeholder={editingStt ? '' : 'Tự động (tối đa 5 ký tự)'}
+                    readOnly
+                    placeholder="Tự động (tối đa 5 ký tự)"
                     style={{
                       width: '100%',
                       padding: '10px 14px',
                       border: '1px solid #DFC9C5',
                       borderRadius: '10px',
-                      backgroundColor: editingStt ? '#fff' : '#F6ECEA',
+                      backgroundColor: '#F6ECEA',
                       color: '#4B3635',
                       fontSize: '14px',
                       boxSizing: 'border-box'
@@ -492,12 +548,15 @@ function AdminPage({ user, onLogout }) {
                       <img
                         src={hinhAnh}
                         alt="Xem trước sản phẩm"
+                        onClick={() => setPreviewImage({ src: hinhAnh, name: tenSp || 'Xem trước sản phẩm' })}
+                        title="Bấm để phóng to"
                         style={{
                           width: '54px',
                           height: '68px',
                           objectFit: 'cover',
                           borderRadius: '8px',
-                          border: '1px solid #DFC9C5'
+                          border: '1px solid #DFC9C5',
+                          cursor: 'zoom-in'
                         }}
                       />
                       <span style={{ fontSize: '12px', color: '#735754' }}>
@@ -571,8 +630,8 @@ function AdminPage({ user, onLogout }) {
                         <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>STT</th>
                         <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>Mã SP</th>
                         <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>Tên sản phẩm</th>
+                        <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>Hình ảnh</th>
                         <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>Danh mục</th>
-                        <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>Số lượng</th>
                         <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>Giá gốc</th>
                         <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>Trạng thái</th>
                         <th style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>Hành động</th>
@@ -584,28 +643,46 @@ function AdminPage({ user, onLogout }) {
                       ) : (
                         filteredProducts.map((item) => (
                           <tr key={item.stt} style={{ borderBottom: '1px solid #F5ECEA' }}>
-                            <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4B3635' }}>#{item.stt}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4B3635', fontWeight: '600' }}>
+                              {item.displayStt}
+                            </td>
                             <td style={{ padding: '14px 16px', fontSize: '14px', fontWeight: '600', color: '#4B3635' }}>{item.ma_sp}</td>
                             <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4B3635' }}>
                               <strong style={{ color: '#3B2827' }}>{item.ten_sp}</strong>
                             </td>
-                            <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4B3635' }}>{item.ten_danh_muc || '-'}</td>
-                            <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4B3635' }}>{item.so_luong ?? 0}</td>
-                            <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4B3635' }}>{Number(item.gia_goc).toLocaleString('vi-VN')} đ</td>
-                            <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4B3635' }}>
-                              {Number(item.trang_thai) === 0 ? (
-                                <span style={{ color: '#C53030', backgroundColor: '#FFF5F5', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-                                  Ngừng bán
-                                </span>
+                            <td style={{ padding: '10px 16px' }}>
+                              {item.hinh_anh ? (
+                                <img
+                                  src={item.hinh_anh}
+                                  alt={item.ten_sp}
+                                  onClick={() => setPreviewImage({ src: item.hinh_anh, name: item.ten_sp })}
+                                  title="Bấm để xem ảnh rõ hơn"
+                                  style={{
+                                    width: '44px',
+                                    height: '56px',
+                                    objectFit: 'cover',
+                                    borderRadius: '6px',
+                                    border: '1px solid #DFC9C5',
+                                    cursor: 'zoom-in',
+                                    display: 'block'
+                                  }}
+                                />
                               ) : (
-                                <span style={{ color: '#2F855A', backgroundColor: '#E6FFFA', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-                                  Đang bán
+                                <span style={{ fontSize: '12px', color: '#9C8380', fontStyle: 'italic' }}>
+                                  Chưa có ảnh
                                 </span>
                               )}
                             </td>
-                            <td style={{ padding: '14px 16px', display: 'flex', gap: '8px' }}>
-                              <button onClick={() => handleEdit(item)} style={{ padding: '6px 12px', backgroundColor: '#D49A42', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Sửa</button>
-                              <button onClick={() => handleDelete(item.stt)} style={{ padding: '6px 12px', backgroundColor: '#C95B5B', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Xóa</button>
+                            <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4B3635' }}>{item.ten_danh_muc || '-'}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4B3635' }}>{Number(item.gia_goc).toLocaleString('vi-VN')} đ</td>
+                            <td style={{ padding: '14px 16px', fontSize: '14px', color: '#4B3635' }}>
+                              {renderProductStatusBadge(item)}
+                            </td>
+                            <td style={{ padding: '14px 16px' }}>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button onClick={() => handleEdit(item)} style={{ padding: '6px 12px', backgroundColor: '#D49A42', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Sửa</button>
+                                <button onClick={() => handleDelete(item.stt)} style={{ padding: '6px 12px', backgroundColor: '#C95B5B', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Xóa</button>
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -618,6 +695,71 @@ function AdminPage({ user, onLogout }) {
           </div>
         )}
       </main>
+
+      {/* Modal phóng to hình ảnh sản phẩm */}
+      {previewImage && (
+        <div
+          onClick={() => setPreviewImage(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(59, 40, 39, 0.65)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            zIndex: 100
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: '#FFFDFC',
+              borderRadius: '14px',
+              border: '2px solid #A9827E',
+              padding: '16px 20px',
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '12px',
+              boxShadow: '0 14px 36px rgba(0, 0, 0, 0.25)'
+            }}
+          >
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+              <strong style={{ color: '#4B3635', fontSize: '15px' }}>{previewImage.name}</strong>
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                style={{
+                  backgroundColor: '#A9827E',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Đóng ✕
+              </button>
+            </div>
+            <img
+              src={previewImage.src}
+              alt={previewImage.name}
+              style={{
+                maxWidth: '82vw',
+                maxHeight: '75vh',
+                objectFit: 'contain',
+                borderRadius: '10px',
+                border: '1px solid #E6D5D2'
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

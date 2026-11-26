@@ -2,6 +2,20 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
+function formatTitleCase(str) {
+  return String(str || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map(
+      (word) =>
+        word.charAt(0).toLocaleUpperCase('vi-VN') +
+        word.slice(1).toLocaleLowerCase('vi-VN')
+    )
+    .join(' ');
+}
+
 function buildPrefix(tenSp) {
   const clean = String(tenSp || '')
     .normalize('NFD')
@@ -23,34 +37,30 @@ function buildPrefix(tenSp) {
   return initials || 'SP';
 }
 
-async function generateUniqueMaSp(tenSp) {
-  const prefix = buildPrefix(tenSp); // tối đa 3 ký tự
+async function generateUniqueMaSp(tenSp, excludeStt = null) {
+  const prefix = buildPrefix(tenSp);
+  const digitLen = 5 - prefix.length;
+  const maxNumber = Math.pow(10, digitLen) - 1;
 
-  const [existingRows] = await db.query(
-    'SELECT ma_sp FROM SANPHAM WHERE ma_sp LIKE ?',
-    [`${prefix}%`]
+  const sql = excludeStt
+    ? 'SELECT ma_sp FROM SANPHAM WHERE ma_sp LIKE ? AND stt != ?'
+    : 'SELECT ma_sp FROM SANPHAM WHERE ma_sp LIKE ?';
+  const params = excludeStt ? [`${prefix}%`, excludeStt] : [`${prefix}%`];
+
+  const [existingRows] = await db.query(sql, params);
+  const existingSet = new Set(
+    existingRows.map((r) => String(r.ma_sp || '').trim().toUpperCase())
   );
-  const existingSet = new Set(existingRows.map((r) => String(r.ma_sp).toUpperCase()));
 
-  // Nếu prefix chưa tồn tại -> dùng luôn prefix (tối đa 3 ký tự <= 5)
-  if (!existingSet.has(prefix)) {
-    return prefix.slice(0, 5);
-  }
-
-  // Nếu đã trùng -> thêm số tự tăng 01, 02... (tối đa 5 ký tự)
-  const maxPrefixLen = 3;
-  const shortPrefix = prefix.slice(0, maxPrefixLen);
-
-  for (let i = 1; i <= 99; i++) {
-    const suffix = String(i).padStart(2, '0'); // 01..99 (2 ký tự)
-    const candidate = `${shortPrefix}${suffix}`.slice(0, 5);
+  for (let i = 1; i <= maxNumber; i++) {
+    const suffix = String(i).padStart(digitLen, '0');
+    const candidate = `${prefix}${suffix}`;
     if (!existingSet.has(candidate)) {
       return candidate;
     }
   }
 
-  // Dự phòng nếu đầy 01..99
-  return `${shortPrefix}99`.slice(0, 5);
+  return `${prefix}${String(maxNumber).padStart(digitLen, '0')}`;
 }
 
 // Lấy danh sách sản phẩm
@@ -63,7 +73,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Thêm sản phẩm mới (tự sinh ma_sp tối đa 5 ký tự)
+// Thêm sản phẩm mới
 router.post('/', async (req, res) => {
   const {
     ten_sp,
@@ -75,7 +85,9 @@ router.post('/', async (req, res) => {
     trang_thai
   } = req.body;
 
-  if (!ten_sp || !String(ten_sp).trim()) {
+  const formattedTenSp = formatTitleCase(ten_sp);
+
+  if (!formattedTenSp) {
     return res.status(400).json({
       success: false,
       message: 'Vui lòng nhập tên sản phẩm!'
@@ -97,14 +109,14 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const autoMaSp = await generateUniqueMaSp(ten_sp);
+    const autoMaSp = await generateUniqueMaSp(formattedTenSp);
 
     const [result] = await db.query(
       `INSERT INTO SANPHAM
         (ten_sp, ma_sp, ten_danh_muc, so_luong, gia_goc, hinh_anh, mo_ta_chi_tiet, trang_thai)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        String(ten_sp).trim(),
+        formattedTenSp,
         autoMaSp,
         String(ten_danh_muc).trim(),
         Number(so_luong) >= 0 ? Number(so_luong) : 0,
@@ -114,13 +126,18 @@ router.post('/', async (req, res) => {
         trang_thai ?? 1
       ]
     );
-    res.status(201).json({ success: true, id: result.insertId, ma_sp: autoMaSp });
+    res.status(201).json({
+      success: true,
+      id: result.insertId,
+      ma_sp: autoMaSp,
+      ten_sp: formattedTenSp
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.sqlMessage || error.message });
   }
 });
 
-// Cập nhật sản phẩm theo stt (giữ nguyên ma_sp hiện tại nếu không đổi tên hoặc giữ mã cũ)
+// Cập nhật sản phẩm theo stt (tự động đổi lại ma_sp nếu tên sản phẩm thay đổi)
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const {
@@ -134,7 +151,9 @@ router.put('/:id', async (req, res) => {
     trang_thai
   } = req.body;
 
-  if (!ten_sp || !String(ten_sp).trim()) {
+  const formattedTenSp = formatTitleCase(ten_sp);
+
+  if (!formattedTenSp) {
     return res.status(400).json({
       success: false,
       message: 'Vui lòng nhập tên sản phẩm!'
@@ -156,14 +175,41 @@ router.put('/:id', async (req, res) => {
   }
 
   try {
-    const safeMaSp = String(ma_sp || '').trim().toUpperCase().slice(0, 5);
+    const [currentRows] = await db.query(
+      'SELECT ten_sp, ma_sp FROM SANPHAM WHERE stt = ? LIMIT 1',
+      [id]
+    );
+
+    if (currentRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy sản phẩm cần cập nhật!'
+      });
+    }
+
+    const oldTenSp = formatTitleCase(currentRows[0].ten_sp);
+    const oldMaSp = String(currentRows[0].ma_sp || '').trim().toUpperCase().slice(0, 5);
+    const inputMaSp = String(ma_sp || '').trim().toUpperCase().slice(0, 5);
+
+    let nextMaSp = inputMaSp || oldMaSp;
+
+    // Nếu tên sản phẩm thay đổi hoặc mã hiện tại chưa khớp tiền tố tên mới -> sinh lại mã mới
+    const expectedPrefix = buildPrefix(formattedTenSp);
+    if (
+      formattedTenSp !== oldTenSp ||
+      !nextMaSp ||
+      !nextMaSp.startsWith(expectedPrefix)
+    ) {
+      nextMaSp = await generateUniqueMaSp(formattedTenSp, id);
+    }
+
     await db.query(
       `UPDATE SANPHAM
        SET ten_sp = ?, ma_sp = ?, ten_danh_muc = ?, so_luong = ?, gia_goc = ?, hinh_anh = ?, mo_ta_chi_tiet = ?, trang_thai = ?
        WHERE stt = ?`,
       [
-        String(ten_sp).trim(),
-        safeMaSp,
+        formattedTenSp,
+        nextMaSp,
         String(ten_danh_muc).trim(),
         Number(so_luong) >= 0 ? Number(so_luong) : 0,
         Number(gia_goc),
@@ -173,7 +219,13 @@ router.put('/:id', async (req, res) => {
         id
       ]
     );
-    res.json({ success: true, message: 'Cập nhật thành công' });
+
+    res.json({
+      success: true,
+      message: 'Cập nhật thành công',
+      ma_sp: nextMaSp,
+      ten_sp: formattedTenSp
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.sqlMessage || error.message });
   }
