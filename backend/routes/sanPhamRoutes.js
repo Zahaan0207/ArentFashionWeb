@@ -110,7 +110,7 @@ router.post('/', async (req, res) => {
         Number(so_luong) >= 0 ? Number(so_luong) : 0,
         Number(gia_goc),
         hinh_anh || null,
-        mo_ta_chi_tiet ? String(mo_ta_chi_t).trim() : null,
+        mo_ta_chi_tiet ? String(mo_ta_chi_tiet).trim() : null,
         trang_thai ?? 1
       ]
     );
@@ -168,7 +168,7 @@ router.put('/:id', async (req, res) => {
         Number(so_luong) >= 0 ? Number(so_luong) : 0,
         Number(gia_goc),
         hinh_anh || null,
-        mo_ta_chi_tiet ? String(mo_ta_chi_t).trim() : null,
+        mo_ta_chi_tiet ? String(mo_ta_chi_tiet).trim() : null,
         trang_thai ?? 1,
         id
       ]
