@@ -3,6 +3,7 @@ const cors = require('cors');
 const sanPhamRoutes = require('./routes/sanPhamRoutes');
 const authRoutes = require('./routes/authRoutes');
 const donHangRoutes = require('./routes/donHangRoutes');
+const nguoiDungRoutes = require('./routes/nguoiDungRoutes');
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.get('/', (req, res) => {
 app.use('/api/sanpham', sanPhamRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/donhang', donHangRoutes);
+app.use('/api/nguoidung', nguoiDungRoutes);
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);

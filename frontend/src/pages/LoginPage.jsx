@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import logoDnhap1 from '../../Pictures/logodnhap1.png';
 import logoDnhap2 from '../../Pictures/logodnhap2.png';
-import okhoatim from '../../Pictures/okhoatim.png';
 import API from '../api/axios';
 
 function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
@@ -17,7 +16,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
     const cleanUser = username.trim();
 
     if (!cleanUser || !password) {
-      setErrorMsg('Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!');
+      setErrorMsg('Vui lòng nhập đầy đủ Tên đăng nhập / Email và Mật khẩu!');
       return;
     }
 
@@ -122,7 +121,7 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
                   color: '#2B1F1E'
                 }}
               >
-                Tên đăng nhập
+                Tên đăng nhập / Email
               </label>
               <input
                 type="text"
@@ -206,29 +205,6 @@ function LoginPage({ onLoginSuccess, onSwitchToSignup }) {
               </button>
             </div>
           </form>
-
-          {/* Quên mật khẩu với icon okhoatim */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '12px' }}>
-            <button
-              type="button"
-              onClick={() => alert('Vui lòng liên hệ quản trị viên Arent Fashion để cấp lại mật khẩu.')}
-              style={{
-                background: 'none',
-                border: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                color: '#5C4341',
-                fontSize: '13px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                padding: '4px'
-              }}
-            >
-              <img src={okhoatim} alt="Lock icon" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
-              <span>Quên mật khẩu?</span>
-            </button>
-          </div>
 
           <div
             style={{

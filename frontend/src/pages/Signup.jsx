@@ -17,9 +17,16 @@ function Signup({ onSignupSuccess, onSwitchToLogin }) {
 
   const handlePhoneChange = (e) => {
     const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, 10);
+    if (onlyDigits.length > 0 && !onlyDigits.startsWith('0')) {
+      setErrorMsg('Số điện thoại phải bắt đầu bằng số 0!');
+      return;
+    }
+    if (errorMsg === 'Số điện thoại phải bắt đầu bằng số 0!') {
+      setErrorMsg('');
+    }
     setPhone(onlyDigits);
   };
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');

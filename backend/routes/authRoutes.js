@@ -14,7 +14,7 @@ router.post('/login', async (req, res) => {
 
   try {
     const [rows] = await db.query(
-      `SELECT nd.ma_nd, nd.ho_ten, nd.email, nd.mat_khau, nd.trang_thai, nd.ten_vaitro
+      `SELECT nd.ma_nd, nd.ho_ten, nd.email, nd.mat_khau, nd.dien_thoai, nd.trang_thai, nd.ten_vaitro
        FROM NGUOIDUNG nd
        INNER JOIN VAITRO vt ON vt.ten_vaitro = nd.ten_vaitro
        WHERE nd.email = ?
@@ -36,6 +36,7 @@ router.post('/login', async (req, res) => {
         id: user.ma_nd,
         username: user.email,
         fullName: user.ho_ten,
+        phone: user.dien_thoai || '',
         role: user.ten_vaitro === 'Admin' ? 'admin' : 'user'
       }
     });
@@ -81,6 +82,7 @@ router.post('/signup', async (req, res) => {
         id: result.insertId,
         username: email,
         fullName,
+        phone,
         role: 'user'
       }
     });
